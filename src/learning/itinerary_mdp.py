@@ -1,11 +1,8 @@
-# itinerary_mdp.py
-from lib.rlProblem import RL_env
+import random
 import math
 from geopy.distance import geodesic
-import random
 
-
-class ItineraryMDP(RL_env):
+class ItineraryMDP:
     """Ambiente MDP per la generazione di itinerari turistici"""
 
     def __init__(self, tourist_id, reasoner, uncertainty_model):
@@ -50,15 +47,11 @@ class ItineraryMDP(RL_env):
         # Calcola il fattore di traffico
         self.traffic_factor = self.uncertainty_model.get_travel_time_factor(self.evidence)
 
-        # Codifica lo stato iniziale
+        # Codifica dello stato iniziale
         self.state = self._encode_state()
-
-        # Nome dell'ambiente
-        self.name = f"ItineraryMDP_Tourist_{tourist_id}"
 
     def _encode_state(self):
         """Codifica lo stato come una stringa"""
-        # Formato: tempo_rimanente|posizione_attuale|attr1,attr2,...
         visited = ",".join(self.itinerary) if self.itinerary else "none"
         return f"{self.available_time}|{self.current_location}|{visited}"
 
