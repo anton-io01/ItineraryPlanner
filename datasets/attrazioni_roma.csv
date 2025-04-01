@@ -1,0 +1,20 @@
+id_attrazione,nome,categoria,latitudine,longitudine,recensione_media,costo,tempo_visita,descrizione
+1,Galleria Borghese,Arte,41.9140607,12.4920302,4.6,20.0,120,"Museo con capolavori di Bernini, Caravaggio e Raffaello."
+2,Musei Capitolini,Storia,41.8926663,12.482201013409966,4.7,16.0,150,"Musei civici più antichi del mondo, ricchi di sculture romane."
+3,Colosseo,Storia,41.8902614,12.493087103595503,4.7,18.0,120,"Iconico anfiteatro romano, simbolo di Roma antica."
+4,Pantheon,Storia,41.89861595,12.476833414483862,4.8,5.0,45,"Antico tempio romano perfettamente conservato, ora chiesa."
+5,Fori Imperiali,Storia,41.8957103,12.4840949,4.8,0.0,90,Complesso monumentale di piazze imperiali romane.
+6,Villa Borghese,Natura,41.914411099999995,12.484843942580198,4.6,0.0,120,"Grande parco pubblico con giardini, lago e musei (come Galleria Borghese)."
+7,Bioparco di Roma,Natura,41.917598999999996,12.48677293270283,4.3,18.0,180,Giardino zoologico situato all'interno di Villa Borghese.
+8,Oasi Park,Divertimento,41.86106475,12.563448313018867,4.3,15.0,150,Piccolo parco divertimenti per bambini alla periferia di Roma.
+9,Musei Vaticani,Arte,41.7950294,12.2496797,4.6,20.0,240,Vasto complesso museale con immense collezioni d'arte e la Cappella Sistina.
+10,Cappella Sistina,Arte,41.9029338,12.45440425,4.7,0.0,30,"Celebre cappella nel Vaticano, affrescata da Michelangelo (inclusa nei Musei Vaticani)."
+11,Castel Sant’Angelo,Storia,41.903117800000004,12.466342676345292,4.7,14.0,120,"Mausoleo romano trasformato in fortezza papale, ora museo."
+12,Fontana di Trevi,Arte,41.9009778,12.483284842339874,4.7,0.0,20,"Fontana barocca monumentale, famosa per il lancio della monetina."
+13,Palatino,Storia,41.8893064,12.4871093,4.7,0.0,90,"Uno dei sette colli di Roma, sito archeologico con rovine di palazzi imperiali (spesso incluso nel biglietto Colosseo/Foro)."
+14,Foro Romano,Storia,41.891641449999995,12.486729586085652,4.7,0.0,120,"Centro della vita pubblica dell'antica Roma, vasta area di rovine (spesso inclusa nel biglietto Colosseo)."
+15,Circo Massimo,Storia,41.886158449999996,12.485308709919227,4.5,0.0,30,"Antico stadio per corse di carri, ora un grande spazio pubblico."
+16,Basilica di San Pietro,Arte,41.89385095,12.493157743210707,4.8,0.0,90,"Principale basilica cattolica, situata nella Città del Vaticano."
+17,Cinecittà World,Divertimento,41.712902299999996,12.449752058560467,3.8,27.0,300,Parco divertimenti a tema cinematografico e televisivo.
+18,Rainbow Magicland,Divertimento,41.76496145,12.960385148728815,4.0,30.0,300,Parco divertimenti a tema fantasy vicino Roma.
+19,Zoomarine,Divertimento,41.63402095,12.456472923337653,4.1,30.0,300,Parco acquatico con spettacoli di animali e attrazioni.
