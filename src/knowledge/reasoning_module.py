@@ -1,6 +1,5 @@
-# enhanced_reasoning_module.py
 from lib.logicRelation import KB, Var, Atom, Clause, unify, apply
-from src.data.data_manager import get_all_attractions_list, load_attractions
+from src.data.data_manager import load_attractions, load_tourists, get_all_attractions_list
 
 
 class DatalogReasoner:
