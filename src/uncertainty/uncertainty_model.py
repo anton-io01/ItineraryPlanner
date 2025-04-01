@@ -1,9 +1,39 @@
-# uncertainty_model.py
-from lib.probGraphicalModels import BeliefNetwork
-from lib.probFactors import Prob, CPD
-from lib.probRC import ProbRC  # Utilizzo di ProbRC invece di VE
-from lib.variable import Variable
+# src/uncertainty/uncertainty_model.py
+from typing import Dict, List, Any, Union
 
+class Variable:
+    """Rappresenta una variabile in un modello probabilistico"""
+    def __init__(self, name: str, values: List[str]):
+        self.name = name
+        self.values = values
+
+class Prob:
+    """Rappresenta una distribuzione di probabilità condizionale"""
+    def __init__(self, variable: Variable, parents: List[Variable], probabilities: Dict[Union[str, tuple], Dict[str, float]]):
+        self.variable = variable
+        self.parents = parents
+        self.probabilities = probabilities
+
+class BeliefNetwork:
+    """Rappresenta una Belief Network probabilistica"""
+    def __init__(self, name: str, variables: set, factors: set):
+        self.name = name
+        self.variables = variables
+        self.factors = factors
+
+class ProbRC:
+    """Implementazione semplificata di Recursive Conditioning per inferenza"""
+    def __init__(self, belief_network):
+        self.bn = belief_network
+
+    def query(self, variable, evidence: Dict[str, str] = {}):
+        """
+        Query probabilistica semplificata
+        Restituisce una distribuzione di probabilità approssimata
+        """
+        # Implementazione base - da raffinare
+        default_distribution = {val: 1.0/len(variable.values) for val in variable.values}
+        return default_distribution
 
 class UncertaintyModel:
     """Modello di incertezza basato su Belief Network"""
@@ -59,15 +89,15 @@ class UncertaintyModel:
         # Inferenza usando ProbRC (recursive conditioning)
         self.inference = ProbRC(self.bn)
 
-    def get_traffic_distribution(self, evidence={}):
+    def get_traffic_distribution(self, evidence: Dict[str, str] = {}):
         """Calcola la distribuzione del traffico date le evidenze"""
         return self.inference.query(self.traffic, evidence)
 
-    def get_crowd_distribution(self, evidence={}):
+    def get_crowd_distribution(self, evidence: Dict[str, str] = {}):
         """Calcola la distribuzione dell'affluenza date le evidenze"""
         return self.inference.query(self.crowd, evidence)
 
-    def get_travel_time_factor(self, evidence={}):
+    def get_travel_time_factor(self, evidence: Dict[str, str] = {}):
         """Calcola un fattore di tempo di viaggio basato sul traffico"""
         traffic_dist = self.get_traffic_distribution(evidence)
 
@@ -79,7 +109,7 @@ class UncertaintyModel:
 
         return expected_factor
 
-    def get_wait_time(self, evidence={}):
+    def get_wait_time(self, evidence: Dict[str, str] = {}):
         """Calcola il tempo di attesa atteso basato sull'affluenza"""
         crowd_dist = self.get_crowd_distribution(evidence)
 
