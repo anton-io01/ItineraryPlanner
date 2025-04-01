@@ -1,13 +1,94 @@
-# itinerary_search.py
-from lib.searchProblem import Search_problem, Arc, Path
-from lib.searchGeneric import AStarSearcher
+# src/planning/itinerary_search.py
+from src.knowledge.reasoning_module import OntologyReasoner
+from src.uncertainty.uncertainty_model import UncertaintyModel
 from geopy.distance import geodesic
+from typing import List, Dict, Any
 
+class Arc:
+    """Rappresenta un arco tra due nodi con un costo"""
+    def __init__(self, from_node, to_node, cost=1):
+        self.from_node = from_node
+        self.to_node = to_node
+        self.cost = cost
+
+class Path:
+    """Rappresenta un percorso attraverso una sequenza di archi"""
+    def __init__(self, problem, initial, arc=None):
+        self.problem = problem
+        self.initial = initial
+        self.arc = arc
+        self.cost = arc.cost if arc else 0
+
+    def end(self):
+        """Restituisce il nodo finale del percorso"""
+        return self.arc.to_node if self.arc else self.initial
+
+    def arcs(self):
+        """Restituisce gli archi del percorso"""
+        current = self
+        arcs = []
+        while current.arc:
+            arcs.append(current.arc)
+            current = current.initial
+        return list(reversed(arcs))
+
+class Search_problem:
+    """Classe base per problemi di ricerca"""
+    def start_node(self):
+        """Restituisce il nodo iniziale"""
+        raise NotImplementedError()
+
+    def is_goal(self, node):
+        """Verifica se un nodo è un goal"""
+        raise NotImplementedError()
+
+    def neighbors(self, node):
+        """Restituisce i vicini di un nodo"""
+        raise NotImplementedError()
+
+    def heuristic(self, node):
+        """Euristica per la ricerca"""
+        return 0
+
+class AStarSearcher:
+    """Implementazione base di A* Search"""
+    def __init__(self, problem):
+        self.problem = problem
+
+    def search(self):
+        """Esegue la ricerca A*"""
+        start = self.problem.start_node()
+        frontier = [(start, start.cost + self.problem.heuristic(start))]
+        explored = set()
+
+        while frontier:
+            # Ordina per costo + euristica
+            frontier.sort(key=lambda x: x[1])
+            current_path, _ = frontier.pop(0)
+
+            # Verifica goal
+            if self.problem.is_goal(current_path):
+                return current_path
+
+            # Marca come esplorato
+            explored.add(current_path.end())
+
+            # Esplora vicini
+            for neighbor in self.problem.neighbors(current_path):
+                if neighbor.end() not in explored:
+                    new_cost = neighbor.cost + self.problem.heuristic(neighbor)
+                    frontier.append((neighbor, new_cost))
+
+        return None
 
 class ItinerarySearch(Search_problem):
     """Problema di ricerca per ottimizzare l'ordine di visita delle attrazioni"""
 
-    def __init__(self, attractions, start_location, uncertainty_model, available_time, evidence={}):
+    def __init__(self, attractions: List[Dict[str, Any]],
+                 start_location: tuple,
+                 uncertainty_model: UncertaintyModel,
+                 available_time: int,
+                 evidence: Dict[str, Any] = {}):
         """
         Inizializza il problema di ricerca
         attractions: Lista di dizionari con informazioni sulle attrazioni
@@ -42,7 +123,7 @@ class ItinerarySearch(Search_problem):
 
     def start_node(self):
         """Restituisce il nodo iniziale"""
-        return Path(self, "start", [], 0)
+        return Path(self, "start", None)
 
     def is_goal(self, node):
         """Verifica se un nodo è un goal"""
