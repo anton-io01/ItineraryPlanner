@@ -9,7 +9,7 @@ class ItineraryMDP:
         """
         Inizializza l'ambiente MDP
         tourist_id: ID del turista
-        reasoner: Istanza di OntologyReasoner
+        reasoner: Istanza di DatalogReasoner
         uncertainty_model: Istanza di UncertaintyModel
         """
         self.tourist_id = tourist_id

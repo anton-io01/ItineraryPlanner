@@ -1,0 +1,636 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xml:base="http://roma-tourism.org/onto.owl"
+         xmlns="http://roma-tourism.org/onto.owl#">
+
+<owl:Ontology rdf:about="http://roma-tourism.org/onto.owl"/>
+
+<owl:ObjectProperty rdf:about="#hasCategory">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="#Interest"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasInterest">
+  <rdfs:domain rdf:resource="#Tourist"/>
+  <rdfs:range rdf:resource="#Interest"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#isNearTo">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="#Attraction"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#isLocatedIn">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="#Neighborhood"/>
+</owl:ObjectProperty>
+
+<owl:DatatypeProperty rdf:about="#hasName">
+  <rdfs:domain rdf:resource="#Tourist"/>
+  <rdfs:domain rdf:resource="#Neighborhood"/>
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasLatitude">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasLongitude">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasAverageRating">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasCost">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasEstimatedVisitTime">
+  <rdfs:domain rdf:resource="#Attraction"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasAvailableTime">
+  <rdfs:domain rdf:resource="#Tourist"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasInterestScore">
+  <rdfs:domain rdf:resource="#Tourist"/>
+  <rdfs:domain rdf:resource="#Interest"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+</owl:DatatypeProperty>
+
+<owl:Class rdf:about="#Attraction">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Museum">
+  <rdfs:subClassOf rdf:resource="#Attraction"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Monument">
+  <rdfs:subClassOf rdf:resource="#Attraction"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ArchaeologicalSite">
+  <rdfs:subClassOf rdf:resource="#Attraction"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Restaurant">
+  <rdfs:subClassOf rdf:resource="#Attraction"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Park">
+  <rdfs:subClassOf rdf:resource="#Attraction"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Interest">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Art">
+  <rdfs:subClassOf rdf:resource="#Interest"/>
+</owl:Class>
+
+<owl:Class rdf:about="#History">
+  <rdfs:subClassOf rdf:resource="#Interest"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Nature">
+  <rdfs:subClassOf rdf:resource="#Interest"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Entertainment">
+  <rdfs:subClassOf rdf:resource="#Interest"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Tourist">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Neighborhood">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:NamedIndividual rdf:about="#centro_storico">
+  <rdf:type rdf:resource="#Neighborhood"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Centro Storico</hasName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#vaticano">
+  <rdf:type rdf:resource="#Neighborhood"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Vaticano</hasName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#trastevere">
+  <rdf:type rdf:resource="#Neighborhood"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Trastevere</hasName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#colosseo">
+  <rdf:type rdf:resource="#Neighborhood"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Colosseo</hasName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#villa_borghese">
+  <rdf:type rdf:resource="#Neighborhood"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Villa Borghese</hasName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_1">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#villa_borghese"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Galleria Borghese</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.9140607</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.4920302</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.6</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">20.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_2">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Musei Capitolini</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.8926663</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.482201013409966</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.7</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">16.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">150</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_3">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Colosseo</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.8902614</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.493087103595505</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.7</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">18.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_4">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#trastevere"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pantheon</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.89861595</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.476833414483862</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.8</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">5.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">45</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_5">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fori Imperiali</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.8957103</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.4840949</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.8</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">90</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_6">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#villa_borghese"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Villa Borghese</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.9144111</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.484843942580198</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.6</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_7">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#villa_borghese"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bioparco di Roma</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.917599</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.48677293270283</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.3</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">18.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">180</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_8">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Oasi Park</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.86106475</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.563448313018869</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.3</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">15.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">150</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_9">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#vaticano"/>
+  <hasCategory rdf:resource="#art1"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Musei Vaticani</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.7950294</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.2496797</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.6</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">20.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">240</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art1">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_10">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#vaticano"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cappella Sistina</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.9029338</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.45440425</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.7</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">30</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_11">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#vaticano"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Castel Sant’Angelo</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.9031178</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.466342676345292</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.7</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">14.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_12">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#centro_storico"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fontana di Trevi</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.9009778</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.483284842339874</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.7</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_13">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Palatino</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.8893064</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.4871093</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.7</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">90</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_14">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Foro Romano</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.89164145</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.486729586085652</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.7</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_15">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Circo Massimo</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.88615845</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.485308709919227</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.5</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">30</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_16">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Basilica di San Pietro</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.89385095</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.493157743210707</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.8</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">90</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_17">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#trastevere"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cinecittà World</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.7129023</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.449752058560469</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.8</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">27.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">300</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_18">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#colosseo"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rainbow Magicland</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.76496145</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.960385148728816</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">30.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">300</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#attraction_19">
+  <rdf:type rdf:resource="#Attraction"/>
+  <isLocatedIn rdf:resource="#trastevere"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zoomarine</hasName>
+  <hasLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41.63402095</hasLatitude>
+  <hasLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.456472923337651</hasLongitude>
+  <hasAverageRating rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.1</hasAverageRating>
+  <hasCost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">30.0</hasCost>
+  <hasEstimatedVisitTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">300</hasEstimatedVisitTime>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_1">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art2"/>
+  <hasInterest rdf:resource="#history1"/>
+  <hasInterest rdf:resource="#nature1"/>
+  <hasInterest rdf:resource="#entertainment1"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 1</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">240</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art2">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history1">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature1">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment1">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_2">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art3"/>
+  <hasInterest rdf:resource="#history2"/>
+  <hasInterest rdf:resource="#nature2"/>
+  <hasInterest rdf:resource="#entertainment2"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 2</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">480</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art3">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history2">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature2">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment2">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_3">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art4"/>
+  <hasInterest rdf:resource="#history3"/>
+  <hasInterest rdf:resource="#nature3"/>
+  <hasInterest rdf:resource="#entertainment3"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 3</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">300</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art4">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history3">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature3">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment3">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_4">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art5"/>
+  <hasInterest rdf:resource="#history4"/>
+  <hasInterest rdf:resource="#nature4"/>
+  <hasInterest rdf:resource="#entertainment4"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 4</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">420</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art5">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history4">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature4">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment4">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_5">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art6"/>
+  <hasInterest rdf:resource="#history5"/>
+  <hasInterest rdf:resource="#nature5"/>
+  <hasInterest rdf:resource="#entertainment5"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 5</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">360</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art6">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history5">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature5">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment5">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_6">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art7"/>
+  <hasInterest rdf:resource="#history6"/>
+  <hasInterest rdf:resource="#nature6"/>
+  <hasInterest rdf:resource="#entertainment6"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 6</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">150</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art7">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history6">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature6">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment6">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_7">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art8"/>
+  <hasInterest rdf:resource="#history7"/>
+  <hasInterest rdf:resource="#nature7"/>
+  <hasInterest rdf:resource="#entertainment7"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 7</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">540</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art8">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history7">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature7">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment7">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_8">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art9"/>
+  <hasInterest rdf:resource="#history8"/>
+  <hasInterest rdf:resource="#nature8"/>
+  <hasInterest rdf:resource="#entertainment8"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 8</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">450</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art9">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history8">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature8">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment8">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_9">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art10"/>
+  <hasInterest rdf:resource="#history9"/>
+  <hasInterest rdf:resource="#nature9"/>
+  <hasInterest rdf:resource="#entertainment9"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 9</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">600</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art10">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history9">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature9">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment9">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#tourist_10">
+  <rdf:type rdf:resource="#Tourist"/>
+  <hasInterest rdf:resource="#art11"/>
+  <hasInterest rdf:resource="#history10"/>
+  <hasInterest rdf:resource="#nature10"/>
+  <hasInterest rdf:resource="#entertainment10"/>
+  <hasName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turista 10</hasName>
+  <hasAvailableTime rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">270</hasAvailableTime>
+  <hasInterestScore rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</hasInterestScore>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#art11">
+  <rdf:type rdf:resource="#Art"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#history10">
+  <rdf:type rdf:resource="#History"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#nature10">
+  <rdf:type rdf:resource="#Nature"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#entertainment10">
+  <rdf:type rdf:resource="#Entertainment"/>
+</owl:NamedIndividual>
+
+
+</rdf:RDF>

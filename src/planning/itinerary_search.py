@@ -1,5 +1,5 @@
 # src/planning/itinerary_search.py
-from src.knowledge.reasoning_module import OntologyReasoner
+from src.knowledge.reasoning_module import DatalogReasoner
 from src.uncertainty.uncertainty_model import UncertaintyModel
 from geopy.distance import geodesic
 from typing import List, Dict, Any

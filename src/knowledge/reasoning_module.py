@@ -1,5 +1,7 @@
 from lib.logicRelation import KB, Var, Atom, Clause, unify, apply
-from src.data.data_manager import load_attractions, load_tourists, get_all_attractions_list
+from src.data.data_manager import load_attractions, load_tourists, get_all_attractions_list, get_tourist_profile, \
+    get_attraction_details
+from geopy.distance import geodesic
 
 
 class DatalogReasoner:
@@ -9,9 +11,11 @@ class DatalogReasoner:
         """Inizializza il reasoner Datalog"""
         # Crea la knowledge base
         self.kb = KB([])
+        print("Inizializzazione reasoner Datalog...")
 
         # Carica i dati
         attractions_df = load_attractions()
+        self.attractions_df = attractions_df  # Salva il DataFrame per usi futuri
         attractions_list = get_all_attractions_list(attractions_df)
 
         # Variabili Datalog
@@ -33,6 +37,9 @@ class DatalogReasoner:
 
             # Aggiungi fatto: has_rating(attr_id, rating)
             self.kb.add_clause(Clause(Atom('has_rating', [attr_id, attr['recensione_media']])))
+
+            # Aggiungi fatto: has_location(attr_id, lat, lon)
+            self.kb.add_clause(Clause(Atom('has_location', [attr_id, attr['latitudine'], attr['longitudine']])))
 
             # Aggiungi categorie in base alla descrizione
             if 'arte' in attr['descrizione'].lower():
@@ -73,10 +80,13 @@ class DatalogReasoner:
         # Carica i dati dei turisti
         self._load_tourist_data()
 
+        print("Reasoner Datalog inizializzato con successo")
+
     def _load_tourist_data(self):
         """Carica i dati dei turisti nella knowledge base"""
         # Carica i dati dei turisti
         tourists_df = load_tourists()
+        self.tourists_df = tourists_df  # Salva il DataFrame per usi futuri
 
         if tourists_df is not None:
             for _, row in tourists_df.iterrows():
@@ -120,7 +130,142 @@ class DatalogReasoner:
         attraction_ids = set()
 
         for interest in interests:
+            interest = interest.lower()  # Normalizza a minuscolo
             results = self.kb.ask_all([Atom('has_category', [Var('X'), interest])])
             attraction_ids.update([result['X'] for result in results])
 
         return list(attraction_ids)
+
+    def get_tourist_by_id(self, tourist_id):
+        """
+        Restituisce un oggetto che rappresenta un turista con i suoi attributi
+        Necessario per la compatibilità con l'interfaccia precedente
+        """
+        # Carica il profilo del turista
+        tourist_profile = get_tourist_profile(self.tourists_df, tourist_id)
+
+        if not tourist_profile:
+            return None
+
+        # Crea un oggetto "simile" a quello restituito dall'ontologia
+        class TouristInfo:
+            def __init__(self, profile):
+                self.id = str(profile['id_turista'])
+                self.hasAvailableTime = [profile['tempo']]
+                self.hasInterest = []
+
+                # Aggiungi interessi basati sui punteggi
+                # Usa lo stesso criterio usato per popolare la KB
+                if profile['arte'] > 5:
+                    self.hasInterest.append('arte')
+                if profile['storia'] > 5:
+                    self.hasInterest.append('storia')
+                if profile['natura'] > 5:
+                    self.hasInterest.append('natura')
+                if profile['divertimento'] > 5:
+                    self.hasInterest.append('divertimento')
+
+        return TouristInfo(tourist_profile)
+
+    def search_one(self, iri=None):
+        """
+        Simula la funzione search_one dell'ontologia
+        Cerca un'attrazione per ID (estraendolo dall'IRI)
+        """
+        if not iri:
+            return None
+
+        # Estrai l'ID dall'IRI (assumiamo che sia nel formato "*id")
+        try:
+            # Cerca di estrarre l'ID dall'IRI
+            parts = iri.split('_')
+            if len(parts) > 1:
+                attraction_id = parts[1]
+
+                # Carica i dettagli dell'attrazione
+                attraction_details = get_attraction_details(self.attractions_df, attraction_id)
+
+                if attraction_details:
+                    class AttractionInfo:
+                        def __init__(self, details):
+                            self.id = str(details['id_attrazione'])
+                            self.name = details['nome']
+                            self.hasLatitude = [details['latitudine']]
+                            self.hasLongitude = [details['longitudine']]
+                            self.hasEstimatedVisitTime = [details['tempo_visita']]
+                            self.hasCategory = []
+
+                            # Aggiungi categorie in base alla descrizione
+                            desc = details['descrizione'].lower()
+                            if 'arte' in desc:
+                                self.hasCategory.append('arte')
+                            if 'storia' in desc:
+                                self.hasCategory.append('storia')
+                            if 'natura' in desc:
+                                self.hasCategory.append('natura')
+                            if 'divertimento' in desc:
+                                self.hasCategory.append('divertimento')
+
+                    return AttractionInfo(attraction_details)
+        except Exception as e:
+            print(f"Errore nella ricerca dell'attrazione: {e}")
+
+        return None
+
+    def get_attractions_near(self, attraction_id, max_distance=1.0):
+        """
+        Trova attrazioni vicine a quella specificata
+        """
+        # Ottieni i dettagli dell'attrazione di origine
+        source_attr = get_attraction_details(self.attractions_df, attraction_id)
+
+        if not source_attr:
+            return []
+
+        source_coords = (source_attr['latitudine'], source_attr['longitudine'])
+
+        # Trova attrazioni vicine
+        nearby_attractions = []
+        for _, attr in self.attractions_df.iterrows():
+            if attr['id_attrazione'] != int(attraction_id):
+                attr_coords = (attr['latitudine'], attr['longitudine'])
+                distance = geodesic(source_coords, attr_coords).kilometers
+
+                if distance <= max_distance:
+                    nearby_attractions.append(str(attr['id_attrazione']))
+
+        return nearby_attractions
+
+    @property
+    def onto(self):
+        """
+        Restituisce un riferimento a se stesso per compatibilità
+        (in originale restituirebbe l'oggetto ontologia)
+        """
+
+        class MockOntology:
+            def __init__(self, reasoner):
+                self.reasoner = reasoner
+
+                class AttractionClass:
+                    def __init__(self, r):
+                        self.r = r
+
+                    def instances(self):
+                        """Restituisce tutte le istanze di attrazioni"""
+                        result = []
+                        for attr_id in range(1, len(self.r.attractions_df) + 1):
+                            attr = self.r.search_one(f"attraction_{attr_id}")
+                            if attr:
+                                result.append(attr)
+                        return result
+
+                self.Attraction = AttractionClass(reasoner)
+
+            def search_one(self, iri=None):
+                """
+                Delega la ricerca al reasoner
+                """
+                return self.reasoner.search_one(iri)
+
+        return MockOntology(self)
