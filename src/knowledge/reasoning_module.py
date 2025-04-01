@@ -139,7 +139,6 @@ class DatalogReasoner:
     def get_tourist_by_id(self, tourist_id):
         """
         Restituisce un oggetto che rappresenta un turista con i suoi attributi
-        Necessario per la compatibilità con l'interfaccia precedente
         """
         # Carica il profilo del turista
         tourist_profile = get_tourist_profile(self.tourists_df, tourist_id)
@@ -154,8 +153,6 @@ class DatalogReasoner:
                 self.hasAvailableTime = [profile['tempo']]
                 self.hasInterest = []
 
-                # Aggiungi interessi basati sui punteggi
-                # Usa lo stesso criterio usato per popolare la KB
                 if profile['arte'] > 5:
                     self.hasInterest.append('arte')
                 if profile['storia'] > 5:
@@ -170,22 +167,23 @@ class DatalogReasoner:
     def search_one(self, iri=None):
         """
         Simula la funzione search_one dell'ontologia
-        Cerca un'attrazione per ID (estraendolo dall'IRI)
+        Cerca un'attrazione per ID o per nome
         """
         if not iri:
             return None
 
-        # Estrai l'ID dall'IRI (assumiamo che sia nel formato "*id")
         try:
-            # Cerca di estrarre l'ID dall'IRI
-            parts = iri.split('_')
-            if len(parts) > 1:
-                attraction_id = parts[1]
+            # Prova a cercare per nome esatto (senza IRI)
+            if iri.startswith('*'):
+                # Rimuovi il carattere '*'
+                name = iri[1:]
+            else:
+                name = iri
 
-                # Carica i dettagli dell'attrazione
-                attraction_details = get_attraction_details(self.attractions_df, attraction_id)
-
-                if attraction_details:
+            # Prova a trovare un'attrazione con questo nome
+            for _, attr in self.attractions_df.iterrows():
+                if attr['nome'] == name:
+                    # Crea un oggetto attrazione
                     class AttractionInfo:
                         def __init__(self, details):
                             self.id = str(details['id_attrazione'])
@@ -193,6 +191,7 @@ class DatalogReasoner:
                             self.hasLatitude = [details['latitudine']]
                             self.hasLongitude = [details['longitudine']]
                             self.hasEstimatedVisitTime = [details['tempo_visita']]
+                            self.hasAverageRating = [details['recensione_media']]
                             self.hasCategory = []
 
                             # Aggiungi categorie in base alla descrizione
@@ -206,7 +205,7 @@ class DatalogReasoner:
                             if 'divertimento' in desc:
                                 self.hasCategory.append('divertimento')
 
-                    return AttractionInfo(attraction_details)
+                    return AttractionInfo(attr)
         except Exception as e:
             print(f"Errore nella ricerca dell'attrazione: {e}")
 
