@@ -1,10 +1,8 @@
-# ontology_population.py
 import os
 from owlready2 import *
+from geopy.distance import geodesic
 from src.data.data_manager import load_attractions, load_tourists, get_all_attractions_list
 from src.knowledge.ontology_definitions import create_ontology
-from geopy.distance import geodesic
-
 
 def populate_ontology():
     """Popola l'ontologia con istanze dai dati CSV e OpenStreetMap"""
@@ -16,36 +14,21 @@ def populate_ontology():
     tourists_df = load_tourists()
     attractions_list = get_all_attractions_list(attractions_df)
 
-    # Ottieni i quartieri di Roma da OpenStreetMap (limitato per efficienza)
-    try:
-        # Definiamo i principali quartieri di Roma per semplicità
-        neighborhoods = {
-            "centro_storico": {"name": "Centro Storico", "coords": (41.9027, 12.4963)},
-            "vaticano": {"name": "Vaticano", "coords": (41.9022, 12.4539)},
-            "trastevere": {"name": "Trastevere", "coords": (41.8891, 12.4658)},
-            "colosseo": {"name": "Colosseo", "coords": (41.8902, 12.4924)},
-            "villa_borghese": {"name": "Villa Borghese", "coords": (41.9137, 12.4919)}
-        }
+    # Quartieri principali di Roma
+    neighborhoods = {
+        "centro_storico": {"name": "Centro Storico", "coords": (41.9027, 12.4963)},
+        "vaticano": {"name": "Vaticano", "coords": (41.9022, 12.4539)},
+        "trastevere": {"name": "Trastevere", "coords": (41.8891, 12.4658)},
+        "colosseo": {"name": "Colosseo", "coords": (41.8902, 12.4924)},
+        "villa_borghese": {"name": "Villa Borghese", "coords": (41.9137, 12.4919)}
+    }
 
-        # Crea i quartieri nell'ontologia
-        neighborhood_instances = {}
-        for id, data in neighborhoods.items():
-            neigh = onto.Neighborhood(id)
-            neigh.hasName = [data["name"]]
-            neighborhood_instances[id] = neigh
-    except Exception as e:
-        print(f"Errore nel caricamento dei quartieri da OSM: {e}")
-        # Fallback: crea manualmente alcuni quartieri
-        neighborhood_instances = {
-            "centro_storico": onto.Neighborhood("centro_storico"),
-            "vaticano": onto.Neighborhood("vaticano"),
-            "trastevere": onto.Neighborhood("trastevere"),
-            "colosseo": onto.Neighborhood("colosseo"),
-            "villa_borghese": onto.Neighborhood("villa_borghese")
-        }
-
-        for id, neigh in neighborhood_instances.items():
-            neigh.hasName = [id.replace("_", " ").title()]
+    # Crea i quartieri nell'ontologia
+    neighborhood_instances = {}
+    for id, data in neighborhoods.items():
+        neigh = onto.Neighborhood(id)
+        neigh.hasName = [data["name"]]
+        neighborhood_instances[id] = neigh
 
     # Mappa categorie CSV a classi dell'ontologia
     category_mapping = {
@@ -105,19 +88,6 @@ def populate_ontology():
         if 'divertimento' in descrizione:
             attr_instance.hasCategory.append(onto.Entertainment())
 
-    # Calcola e aggiungi relazioni di vicinanza (distanza < 1km)
-    for attr_id1, attr1 in attractions_instances.items():
-        for attr_id2, attr2 in attractions_instances.items():
-            if attr_id1 != attr_id2:
-                # Usa geopy per calcolare la distanza
-                coords1 = (attr1.hasLatitude[0], attr1.hasLongitude[0])
-                coords2 = (attr2.hasLatitude[0], attr2.hasLongitude[0])
-
-                dist = geodesic(coords1, coords2).kilometers
-
-                if dist < 1:
-                    attr1.isNearTo.append(attr2)
-
     # Popola i turisti
     for _, row in tourists_df.iterrows():
         tourist_id = str(row['id_turista'])
@@ -148,11 +118,7 @@ def populate_ontology():
             tourist.hasInterest.append(interest)
             tourist.hasInterestScore = [int(row['divertimento'])]
 
-    # Esegui il reasoner
-    with onto:
-        sync_reasoner()
-
     # Salva l'ontologia
-    os.makedirs("ontologies", exist_ok=True)  # Crea la directory se non esiste
+    os.makedirs("ontologies", exist_ok=True)
     onto.save("ontologies/roma_tourism.owl")
     return onto

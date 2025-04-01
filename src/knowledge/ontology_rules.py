@@ -1,6 +1,38 @@
-# ontology_rules.py
-from lib.logicRelation import Atom, Var, KB, Clause
+from typing import List, Dict, Any
 from src.data.data_manager import get_all_attractions_list, load_attractions
+
+
+class Var:
+    def __init__(self, name: str):
+        self.name = name
+
+
+class Atom:
+    def __init__(self, name: str, args: List[Any]):
+        self.name = name
+        self.args = args
+
+
+class Clause:
+    def __init__(self, head, body=None):
+        self.head = head
+        self.body = body or []
+
+
+class KB:
+    def __init__(self, clauses: List[Clause] = None):
+        self.clauses = clauses or []
+
+    def add_clause(self, clause: Clause):
+        self.clauses.append(clause)
+
+    def ask(self, query: List[Atom]) -> List[Dict[str, Any]]:
+        """
+        Metodo base per eseguire query logiche
+        Implementazione semplificata
+        """
+        results = []
+        return results
 
 
 def create_logic_rules():
