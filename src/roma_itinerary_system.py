@@ -5,7 +5,7 @@ import time
 # Import dei moduli interni
 from src.data.data_manager import load_attractions, load_tourists, get_tourist_profile, get_attraction_details
 from src.knowledge.ontology_population import populate_ontology
-from src.knowledge.reasoning_module import OntologyReasoner
+from src.knowledge.reasoning_module import DatalogReasoner
 from src.uncertainty.uncertainty_model import UncertaintyModel
 from src.learning.itinerary_agent import ItineraryAgent
 from src.planning.itinerary_search import ItinerarySearch, AStarSearcher
@@ -23,18 +23,9 @@ class RomaItinerarySystem:
         self.attractions_df = load_attractions()
         self.tourists_df = load_tourists()
 
-        # Inizializza l'ontologia
-        self.ontology_file = "ontologies/roma_tourism.owl"
-        os.makedirs("ontologies", exist_ok=True)  # Crea la directory se non esiste
-        if not os.path.exists(self.ontology_file):
-            print("Inizializzazione e popolamento dell'ontologia...")
-            populate_ontology()
-        else:
-            print(f"Ontologia esistente trovata: {self.ontology_file}")
-
-        # Inizializza reasoner ontologico
-        print("Inizializzazione reasoner ontologico...")
-        self.reasoner = OntologyReasoner(self.ontology_file)
+        # Inizializza il reasoner Datalog (non richiede Java)
+        print("Inizializzazione reasoner Datalog...")
+        self.reasoner = DatalogReasoner()
 
         # Inizializza modello di incertezza
         print("Creazione modello di incertezza...")

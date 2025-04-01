@@ -1,131 +1,127 @@
-# reasoning_module.py
-from owlready2 import *
-from src.knowledge.ontology_definitions import create_ontology
-from src.knowledge.ontology_rules import create_logic_rules
-from geopy.distance import geodesic
+# enhanced_reasoning_module.py
+from lib.logicRelation import KB, Var, Atom, Clause, unify, apply
+from src.data.data_manager import get_all_attractions_list, load_attractions
 
 
-class OntologyReasoner:
-    """Classe per il ragionamento e le query sull'ontologia"""
+class DatalogReasoner:
+    """Reasoner basato su Datalog per il sistema turistico"""
 
-    def __init__(self, ontology_path="ontologies/roma_tourism.owl"):
-        """Inizializza il reasoner con l'ontologia specificata"""
-        try:
-            # Carica l'ontologia esistente
-            self.onto = get_ontology(ontology_path).load()
-        except Exception as e:
-            print(f"Errore nel caricamento dell'ontologia: {e}")
-            # Crea una nuova ontologia
-            self.onto = create_ontology()
+    def __init__(self):
+        """Inizializza il reasoner Datalog"""
+        # Crea la knowledge base
+        self.kb = KB([])
 
-        # Inizializza il reasoner
-        with self.onto:
-            sync_reasoner()
+        # Carica i dati
+        attractions_df = load_attractions()
+        attractions_list = get_all_attractions_list(attractions_df)
 
-        # Carica le regole datalog
-        self.logic_kb = create_logic_rules()
+        # Variabili Datalog
+        X = Var('X')
+        Y = Var('Y')
+        Z = Var('Z')
+        Cost = Var('Cost')
+        Rating = Var('Rating')
 
-    def find_attractions_by_interest(self, interest_names):
-        """Trova attrazioni in base agli interessi"""
-        matching_attractions = []
+        # Aggiungi fatti alla knowledge base
+        for attr in attractions_list:
+            attr_id = str(attr['id_attrazione'])
 
-        for attraction in self.onto.Attraction.instances():
-            # Verifica se l'attrazione ha almeno una delle categorie richieste
-            for interest_name in interest_names:
-                if hasattr(self.onto, interest_name):
-                    interest_class = getattr(self.onto, interest_name)
-                    # Verifica se qualche categoria dell'attrazione è del tipo di interesse
-                    if any(isinstance(category, interest_class) for category in attraction.hasCategory):
-                        matching_attractions.append(attraction)
-                        break
+            # Aggiungi fatto: attraction(attr_id)
+            self.kb.add_clause(Clause(Atom('attraction', [attr_id])))
 
-        return matching_attractions
+            # Aggiungi fatto: has_cost(attr_id, cost)
+            self.kb.add_clause(Clause(Atom('has_cost', [attr_id, attr['costo']])))
 
-    def find_budget_friendly_attractions(self, max_cost=15):
-        """Trova attrazioni economiche usando Datalog"""
-        # Prepara la query Datalog
-        results = []
-        for answer in self.logic_kb.ask([self.logic_kb.Atom('budget_friendly', ['X'])]):
-            attr_id = answer['X']
-            attraction = self.get_attraction_by_id(attr_id)
-            if attraction:
-                results.append(attraction)
+            # Aggiungi fatto: has_rating(attr_id, rating)
+            self.kb.add_clause(Clause(Atom('has_rating', [attr_id, attr['recensione_media']])))
 
-        return results
+            # Aggiungi categorie in base alla descrizione
+            if 'arte' in attr['descrizione'].lower():
+                self.kb.add_clause(Clause(Atom('has_category', [attr_id, 'arte'])))
+            if 'storia' in attr['descrizione'].lower():
+                self.kb.add_clause(Clause(Atom('has_category', [attr_id, 'storia'])))
+            if 'natura' in attr['descrizione'].lower():
+                self.kb.add_clause(Clause(Atom('has_category', [attr_id, 'natura'])))
+            if 'divertimento' in attr['descrizione'].lower():
+                self.kb.add_clause(Clause(Atom('has_category', [attr_id, 'divertimento'])))
+
+        # Aggiungi regole
+
+        # Un'attrazione è considerata di alto rating se rating >= 4
+        self.kb.add_clause(Clause(
+            Atom('high_rated', [X]),
+            [Atom('attraction', [X]), Atom('has_rating', [X, Rating]), Atom('lt', [4.0, Rating])]
+        ))
+
+        # Un'attrazione è economica se costo <= 15
+        self.kb.add_clause(Clause(
+            Atom('budget_friendly', [X]),
+            [Atom('attraction', [X]), Atom('has_cost', [X, Cost]), Atom('lt', [Cost, 15.0])]
+        ))
+
+        # Un'attrazione è consigliata se ha un buon rating e un costo contenuto
+        self.kb.add_clause(Clause(
+            Atom('recommended', [X]),
+            [Atom('attraction', [X]), Atom('high_rated', [X]), Atom('budget_friendly', [X])]
+        ))
+
+        # Un'attrazione è adatta a un turista se ha una categoria che piace al turista
+        self.kb.add_clause(Clause(
+            Atom('suitable_for', [X, Z]),
+            [Atom('attraction', [X]), Atom('tourist_likes', [Z, Y]), Atom('has_category', [X, Y])]
+        ))
+
+        # Carica i dati dei turisti
+        self._load_tourist_data()
+
+    def _load_tourist_data(self):
+        """Carica i dati dei turisti nella knowledge base"""
+        # Carica i dati dei turisti
+        tourists_df = load_tourists()
+
+        if tourists_df is not None:
+            for _, row in tourists_df.iterrows():
+                tourist_id = str(row['id_turista'])
+
+                # Aggiungi interessi basati sui punteggi
+                if row['arte'] > 5:  # Soglia per considerare un interesse rilevante
+                    self.kb.add_clause(Clause(Atom('tourist_likes', [tourist_id, 'arte'])))
+
+                if row['storia'] > 5:
+                    self.kb.add_clause(Clause(Atom('tourist_likes', [tourist_id, 'storia'])))
+
+                if row['natura'] > 5:
+                    self.kb.add_clause(Clause(Atom('tourist_likes', [tourist_id, 'natura'])))
+
+                if row['divertimento'] > 5:
+                    self.kb.add_clause(Clause(Atom('tourist_likes', [tourist_id, 'divertimento'])))
 
     def find_high_rated_attractions(self):
-        """Trova attrazioni con valutazione alta usando Datalog"""
-        results = []
-        for answer in self.logic_kb.ask([self.logic_kb.Atom('high_rated', ['X'])]):
-            attr_id = answer['X']
-            attraction = self.get_attraction_by_id(attr_id)
-            if attraction:
-                results.append(attraction)
+        """Trova attrazioni con valutazione alta"""
+        results = self.kb.ask_all([Atom('high_rated', [Var('X')])])
+        return [result['X'] for result in results]
 
-        return results
+    def find_budget_friendly_attractions(self):
+        """Trova attrazioni economiche"""
+        results = self.kb.ask_all([Atom('budget_friendly', [Var('X')])])
+        return [result['X'] for result in results]
+
+    def find_recommended_attractions(self):
+        """Trova attrazioni consigliate (alto rating e budget friendly)"""
+        results = self.kb.ask_all([Atom('recommended', [Var('X')])])
+        return [result['X'] for result in results]
 
     def find_suitable_attractions(self, tourist_id):
-        """Trova attrazioni adatte a un turista specifico usando Datalog"""
-        results = []
-        for answer in self.logic_kb.ask([self.logic_kb.Atom('suitable_for', ['X', tourist_id])]):
-            attr_id = answer['X']
-            attraction = self.get_attraction_by_id(attr_id)
-            if attraction:
-                results.append(attraction)
+        """Trova attrazioni adatte a un turista specifico"""
+        results = self.kb.ask_all([Atom('suitable_for', [Var('X'), tourist_id])])
+        return [result['X'] for result in results]
 
-        return results
+    def find_attractions_by_interest(self, interests):
+        """Trova attrazioni in base agli interessi"""
+        attraction_ids = set()
 
-    def find_nearby_attractions(self, attraction_id, max_distance=1.0):
-        """Trova attrazioni vicine a una data attrazione"""
-        source_attraction = self.get_attraction_by_id(attraction_id)
-        if not source_attraction:
-            return []
+        for interest in interests:
+            results = self.kb.ask_all([Atom('has_category', [Var('X'), interest])])
+            attraction_ids.update([result['X'] for result in results])
 
-        nearby = []
-        src_coords = (source_attraction.hasLatitude[0], source_attraction.hasLongitude[0])
-
-        for attraction in self.onto.Attraction.instances():
-            if attraction != source_attraction and attraction.hasLatitude and attraction.hasLongitude:
-                dst_coords = (attraction.hasLatitude[0], attraction.hasLongitude[0])
-                distance = geodesic(src_coords, dst_coords).kilometers
-
-                if distance <= max_distance:
-                    nearby.append((attraction, distance))
-
-        # Ordina per distanza
-        nearby.sort(key=lambda x: x[1])
-        return [attr for attr, _ in nearby]
-
-    def get_attraction_by_id(self, attraction_id):
-        """Recupera un'attrazione tramite ID"""
-        attraction_name = f"attraction_{attraction_id}"
-        return self.onto.search_one(iri=f"*{attraction_name}")
-
-    def get_tourist_by_id(self, tourist_id):
-        """Recupera un profilo turistico tramite ID"""
-        tourist_name = f"tourist_{tourist_id}"
-        return self.onto.search_one(iri=f"*{tourist_name}")
-
-    def recommend_attractions_for_tourist(self, tourist_id, max_attractions=5):
-        """Raccomanda attrazioni per un turista specifico"""
-        tourist = self.get_tourist_by_id(tourist_id)
-        if not tourist:
-            return []
-
-        # Ottieni interessi del turista
-        interest_classes = [type(interest) for interest in tourist.hasInterest]
-
-        matching_attractions = []
-        for attraction in self.onto.Attraction.instances():
-            # Verifica se l'attrazione ha categorie che corrispondono agli interessi
-            for category in attraction.hasCategory:
-                if type(category) in interest_classes:
-                    matching_attractions.append(attraction)
-                    break
-
-        # Ordina per valutazione e restituisci i migliori
-        return sorted(
-            matching_attractions,
-            key=lambda a: a.hasAverageRating[0] if a.hasAverageRating else 0,
-            reverse=True
-        )[:max_attractions]
+        return list(attraction_ids)
