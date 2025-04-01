@@ -39,7 +39,7 @@ def yes(ans):
     """returns true if the answer is yes in some form"""
     return ans.lower() in ['yes', 'oui', 'y']    # bilingual
 
-from display import Displayable
+from lib.display import Displayable
         
 class KB(Displayable):
     """A knowledge base consists of a set of clauses.

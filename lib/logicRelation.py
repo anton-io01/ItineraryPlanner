@@ -8,8 +8,8 @@
 # Attribution-NonCommercial-ShareAlike 4.0 International License.
 # See: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
 
-from display import Displayable
-import logicProblem
+from lib.display import Displayable
+import lib.logicProblem
 
 class Var(Displayable):
     """A logical variable"""
@@ -38,12 +38,12 @@ class Atom(object):
 
 Func = Atom  # same syntax is used for function symbols
 
-class Clause(logicProblem.Clause):
+class Clause(lib.logicProblem.Clause):
     next_index=0
     def __init__(self, head, *args, **nargs):
         if not isinstance(head, Atom):
             head = Atom(head)
-        logicProblem.Clause.__init__(self, head, *args, **nargs)
+        lib.logicProblem.Clause.__init__(self, head, *args, **nargs)
         self.logical_variables = log_vars([self.head,self.body],set())
 
     def rename(self):
@@ -118,7 +118,7 @@ e3 = Atom('p',['a',Var('Y'),Var('Y')])
 e4 = Atom('p',[Var('Z'),Var('Z'),'b'])
 # unify(e3,e4)
 
-class KB(logicProblem.KB):
+class KB(lib.logicProblem.KB):
     """A first-order knowledge base. 
       only the indexing is changed to index on name of the head."""
         
