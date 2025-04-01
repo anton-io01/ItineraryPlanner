@@ -1,14 +1,15 @@
-# roma_itinerary_system.py
-from src.data.data_manager import load_attractions, load_tourists, get_tourist_profile, get_attraction_details
-from src.knowledge.ontology_population import populate_ontology
-from src.knowledge.reasoning_module import OntologyReasoner
-from src.learning.itinerary_agent import ItineraryAgent
-from src.uncertainty.uncertainty_model import UncertaintyModel
-from src.planning.itinerary_search import ItinerarySearch
-from lib.searchGeneric import AStarSearcher
+# src/roma_itinerary_system.py
 import os
 import time
 
+# Import dei moduli interni
+from src.data.data_manager import load_attractions, load_tourists, get_tourist_profile, get_attraction_details
+from src.knowledge.ontology_population import populate_ontology
+from src.knowledge.reasoning_module import OntologyReasoner
+from src.uncertainty.uncertainty_model import UncertaintyModel
+from src.learning.itinerary_agent import ItineraryAgent
+from src.planning.itinerary_search import ItinerarySearch, AStarSearcher
+from geopy.distance import geodesic
 
 class RomaItinerarySystem:
     """Sistema completo per la generazione di itinerari turistici a Roma"""
@@ -181,7 +182,7 @@ class RomaItinerarySystem:
             path = searcher.search()
 
             if path:
-                print(f"A* ha trovato un percorso ottimale con {len(path.nodes()) - 1} attrazioni")
+                print(f"A* ha trovato un percorso ottimale con {len(path.arcs())} attrazioni")
 
                 # Estrai l'itinerario dal percorso
                 attraction_ids = [arc.to_node for arc in path.arcs() if arc.to_node != "start"]
