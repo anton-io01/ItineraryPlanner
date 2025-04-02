@@ -1,0 +1,13 @@
+Condizione,Turista,Numero attrazioni,Valutazione media,Tempo totale (min)
+Mattina feriale,1,2,4.8,190
+Mattina feriale,2,4,4.75,486
+Mattina feriale,5,3,4.77,342
+Pomeriggio feriale,1,2,4.8,190
+Pomeriggio feriale,2,4,4.75,486
+Pomeriggio feriale,5,3,4.77,342
+Mattina weekend,1,2,4.8,190
+Mattina weekend,2,4,4.75,486
+Mattina weekend,5,3,4.77,342
+Pomeriggio weekend,1,2,4.8,190
+Pomeriggio weekend,2,4,4.75,486
+Pomeriggio weekend,5,3,4.77,342

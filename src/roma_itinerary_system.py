@@ -120,7 +120,7 @@ class RomaItinerarySystem:
             if tourist_id not in self.agents:
                 print(f"Addestramento agente RL per il turista {tourist_id}...")
                 self.agents[tourist_id] = ItineraryAgent(tourist_id, self.reasoner, self.uncertainty_model)
-                self.agents[tourist_id].train(num_episodes=1)
+                self.agents[tourist_id].train(num_episodes=50)
 
             # Genera itinerario
             attraction_ids, reward = self.agents[tourist_id].generate_itinerary(time_of_day, day_of_week)
