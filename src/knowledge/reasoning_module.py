@@ -126,13 +126,57 @@ class DatalogReasoner:
         return [result['X'] for result in results]
 
     def find_attractions_by_interest(self, interests):
-        """Trova attrazioni in base agli interessi"""
+        """Trova attrazioni in base agli interessi con ricerca flessibile"""
         attraction_ids = set()
 
-        for interest in interests:
-            interest = interest.lower()  # Normalizza a minuscolo
-            results = self.kb.ask_all([Atom('has_category', [Var('X'), interest])])
-            attraction_ids.update([result['X'] for result in results])
+        # Debug - mostra interessi ricevuti
+        print(f"Ricerca attrazioni per interessi: {interests}")
+
+        # Se non ci sono interessi, restituisci tutte le attrazioni
+        if not interests:
+            print("Nessun interesse specificato, restituisco tutte le attrazioni")
+            return [str(id) for id in self.attractions_df['id_attrazione']]
+
+        # Normalizza tutti gli interessi a minuscolo per la ricerca
+        normalized_interests = [interest.lower() for interest in interests]
+
+        # Mappatura flessibile degli interessi a termini di ricerca
+        interest_terms = {
+            'arte': ['arte', 'museo', 'galleria', 'cappella', 'basilica'],
+            'storia': ['storia', 'antico', 'storico', 'romano', 'imperiale', 'foro', 'rovina'],
+            'natura': ['natura', 'villa', 'parco', 'giardino', 'verde'],
+            'divertimento': ['divertimento', 'svago', 'parco', 'world', 'bambini']
+        }
+
+        # Espandi gli interessi specificati ai termini di ricerca
+        search_terms = set()
+        for interest in normalized_interests:
+            if interest in interest_terms:
+                search_terms.update(interest_terms[interest])
+            else:
+                search_terms.add(interest)
+
+        print(f"Termini di ricerca: {search_terms}")
+
+        # Cerca nelle descrizioni
+        for _, attr in self.attractions_df.iterrows():
+            description = attr['descrizione'].lower()
+            name = attr['nome'].lower()
+
+            # Verifica se i termini di ricerca sono presenti nella descrizione o nel nome
+            for term in search_terms:
+                if term in description or term in name:
+                    attraction_ids.add(str(attr['id_attrazione']))
+                    break
+
+        print(f"Trovate {len(attraction_ids)} attrazioni basate su descrizioni e nomi")
+
+        # Se non è stato trovato nulla, restituisci le attrazioni con il rating più alto
+        if not attraction_ids:
+            print(
+                "Nessuna attrazione trovata in base agli interessi, restituisco le attrazioni con valutazioni migliori")
+            top_attractions = self.attractions_df.sort_values('recensione_media', ascending=False).head(5)
+            attraction_ids = set(str(id) for id in top_attractions['id_attrazione'])
 
         return list(attraction_ids)
 
@@ -173,7 +217,42 @@ class DatalogReasoner:
             return None
 
         try:
-            # Prova a cercare per nome esatto (senza IRI)
+            # Gestisci il caso di IRI nel formato "attraction_X"
+            if iri.startswith('attraction_'):
+                try:
+                    # Estrai l'ID numerico
+                    attr_id = int(iri.split('_')[1])
+                    # Cerca l'attrazione con questo ID
+                    attr = self.attractions_df[self.attractions_df['id_attrazione'] == attr_id]
+                    if not attr.empty:
+                        # Crea un oggetto attrazione
+                        class AttractionInfo:
+                            def __init__(self, details):
+                                self.id = str(details['id_attrazione'])
+                                self.name = details['nome']
+                                self.hasLatitude = [details['latitudine']]
+                                self.hasLongitude = [details['longitudine']]
+                                self.hasEstimatedVisitTime = [details['tempo_visita']]
+                                self.hasAverageRating = [details['recensione_media']]
+                                self.hasCategory = []
+
+                                # Aggiungi categorie in base alla descrizione
+                                desc = details['descrizione'].lower()
+                                if 'arte' in desc:
+                                    self.hasCategory.append('arte')
+                                if 'storia' in desc:
+                                    self.hasCategory.append('storia')
+                                if 'natura' in desc:
+                                    self.hasCategory.append('natura')
+                                if 'divertimento' in desc:
+                                    self.hasCategory.append('divertimento')
+
+                        return AttractionInfo(attr.iloc[0])
+                except (IndexError, ValueError) as e:
+                    print(f"Errore nell'elaborazione dell'IRI {iri}: {e}")
+                    return None
+
+            # Gestisci il caso di ricerca per nome (con o senza *)
             if iri.startswith('*'):
                 # Rimuovi il carattere '*'
                 name = iri[1:]
@@ -181,31 +260,31 @@ class DatalogReasoner:
                 name = iri
 
             # Prova a trovare un'attrazione con questo nome
-            for _, attr in self.attractions_df.iterrows():
-                if attr['nome'] == name:
-                    # Crea un oggetto attrazione
-                    class AttractionInfo:
-                        def __init__(self, details):
-                            self.id = str(details['id_attrazione'])
-                            self.name = details['nome']
-                            self.hasLatitude = [details['latitudine']]
-                            self.hasLongitude = [details['longitudine']]
-                            self.hasEstimatedVisitTime = [details['tempo_visita']]
-                            self.hasAverageRating = [details['recensione_media']]
-                            self.hasCategory = []
+            match = self.attractions_df[self.attractions_df['nome'] == name]
+            if not match.empty:
+                # Crea un oggetto attrazione
+                class AttractionInfo:
+                    def __init__(self, details):
+                        self.id = str(details['id_attrazione'])
+                        self.name = details['nome']
+                        self.hasLatitude = [details['latitudine']]
+                        self.hasLongitude = [details['longitudine']]
+                        self.hasEstimatedVisitTime = [details['tempo_visita']]
+                        self.hasAverageRating = [details['recensione_media']]
+                        self.hasCategory = []
 
-                            # Aggiungi categorie in base alla descrizione
-                            desc = details['descrizione'].lower()
-                            if 'arte' in desc:
-                                self.hasCategory.append('arte')
-                            if 'storia' in desc:
-                                self.hasCategory.append('storia')
-                            if 'natura' in desc:
-                                self.hasCategory.append('natura')
-                            if 'divertimento' in desc:
-                                self.hasCategory.append('divertimento')
+                        # Aggiungi categorie in base alla descrizione
+                        desc = details['descrizione'].lower()
+                        if 'arte' in desc:
+                            self.hasCategory.append('arte')
+                        if 'storia' in desc:
+                            self.hasCategory.append('storia')
+                        if 'natura' in desc:
+                            self.hasCategory.append('natura')
+                        if 'divertimento' in desc:
+                            self.hasCategory.append('divertimento')
 
-                    return AttractionInfo(attr)
+                return AttractionInfo(match.iloc[0])
         except Exception as e:
             print(f"Errore nella ricerca dell'attrazione: {e}")
 
@@ -253,10 +332,15 @@ class DatalogReasoner:
                     def instances(self):
                         """Restituisce tutte le istanze di attrazioni"""
                         result = []
+                        print(f"Cercando attrazioni nel DataFrame di lunghezza {len(self.r.attractions_df)}")
                         for attr_id in range(1, len(self.r.attractions_df) + 1):
+                            print(f"Cercando attraction_{attr_id}")
                             attr = self.r.search_one(f"attraction_{attr_id}")
                             if attr:
+                                print(f"Trovata attrazione: {attr.name}")
                                 result.append(attr)
+                            else:
+                                print(f"Attrazione attraction_{attr_id} non trovata")
                         return result
 
                 self.Attraction = AttractionClass(reasoner)

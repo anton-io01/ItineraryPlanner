@@ -47,6 +47,26 @@ class ItineraryMDP:
                         break
 
             print(f"Trovate {len(matching_attractions)} attrazioni corrispondenti agli interessi")
+
+            # Se ci sono meno di 3 attrazioni, cerca attrazioni con tempo di visita breve
+            if len(matching_attractions) < 3:
+                print("Trovate poche attrazioni, cercando attrazioni con tempo di visita breve...")
+                # Tempo disponibile del turista
+                available_time = self.tourist.hasAvailableTime[0] if hasattr(self.tourist,
+                                                                             'hasAvailableTime') and self.tourist.hasAvailableTime else 480
+
+                # Cerca attrazioni con tempo di visita <= 120 minuti (2 ore)
+                short_attraction_ids = self.reasoner.find_attractions_by_max_time(120)
+
+                for attr_id in short_attraction_ids:
+                    # Converti a intero se necessario
+                    numeric_id = int(attr_id) if attr_id.isdigit() else attr_id
+
+                    # Cerca l'attrazione per ID
+                    short_attr = self.reasoner.onto.search_one(f"attraction_{numeric_id}")
+                    if short_attr and short_attr not in matching_attractions:
+                        print(f"Aggiunta attrazione breve: {short_attr.name}")
+                        matching_attractions.append(short_attr)
         except Exception as e:
             print(f"Errore nella ricerca delle attrazioni: {e}")
             matching_attractions = []
@@ -56,7 +76,8 @@ class ItineraryMDP:
         print(f"Azioni disponibili: {len(self.actions)}")
 
         # Stato iniziale: tempo disponibile e itinerario vuoto
-        self.available_time = self.tourist.hasAvailableTime[0] if self.tourist.hasAvailableTime else 480  # 8 ore
+        self.available_time = self.tourist.hasAvailableTime[0] if hasattr(self.tourist,
+                                                                          'hasAvailableTime') and self.tourist.hasAvailableTime else 480  # 8 ore
         self.current_location = "start"  # Posizione iniziale
         self.itinerary = []  # Lista di attrazioni nell'itinerario
         self.reward = 0  # Reward accumulato
@@ -217,5 +238,4 @@ class ItineraryMDP:
         new_categories = set(type(cat) for cat in attraction.hasCategory)
 
         # Verifica se c'è almeno una categoria non ancora visitata
-        return bool(new_categories - visited_categories)
         return bool(new_categories - visited_categories)

@@ -88,34 +88,53 @@ class RomaItinerarySystem:
 
             # Converti in formato utilizzabile
             for attr_id in attraction_ids:
-                # Estrai l'ID numerico
-                num_id = attr_id.split('_')[1]
+                # Cerca di ottenere l'ID numerico
+                try:
+                    # Verifica se l'ID è nel formato "attraction_X"
+                    if '_' in attr_id:
+                        num_id = attr_id.split('_')[1]
+                    else:
+                        # Se è un nome di attrazione, cerca nell'elenco attrazioni
+                        found = False
+                        for idx, row in self.attractions_df.iterrows():
+                            if row['nome'] == attr_id:
+                                num_id = str(row['id_attrazione'])
+                                found = True
+                                break
 
-                # Ottieni dettagli
-                details = get_attraction_details(self.attractions_df, num_id)
-                if details:
-                    selected_attractions.append({
-                        'id': num_id,
-                        'name': details['nome'],
-                        'lat': details['latitudine'],
-                        'lon': details['longitudine'],
-                        'visit_time': details['tempo_visita'],
-                        'cost': details['costo'],
-                        'rating': details['recensione_media']
-                    })
+                        if not found:
+                            print(f"ATTENZIONE: Non riesco a trovare l'ID per {attr_id}, ignoro questa attrazione")
+                            continue
+
+                    # Ottieni dettagli
+                    details = get_attraction_details(self.attractions_df, num_id)
+                    if details:
+                        selected_attractions.append({
+                            'id': num_id,
+                            'name': details['nome'],
+                            'lat': details['latitudine'],
+                            'lon': details['longitudine'],
+                            'visit_time': details['tempo_visita'],
+                            'cost': details['costo'],
+                            'rating': details['recensione_media']
+                        })
+                except Exception as e:
+                    print(f"Errore nell'elaborazione dell'attrazione {attr_id}: {e}")
         else:
             print("Selezione attrazioni con ragionamento ontologico...")
 
             # Determina gli interessi del turista
             interests = []
             if tourist_profile['arte'] > 2:
-                interests.append('Art')
+                interests.append('arte')  # In italiano minuscolo
             if tourist_profile['storia'] > 2:
-                interests.append('History')
+                interests.append('storia')  # In italiano minuscolo
             if tourist_profile['natura'] > 2:
-                interests.append('Nature')
+                interests.append('natura')  # In italiano minuscolo
             if tourist_profile['divertimento'] > 2:
-                interests.append('Entertainment')
+                interests.append('divertimento')  # In italiano minuscolo
+
+            print(f"Interessi identificati: {interests}")
 
             # Query all'ontologia
             attractions = self.reasoner.find_attractions_by_interest(interests)
