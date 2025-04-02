@@ -27,7 +27,6 @@ def load_csv_to_dataframe(file_path):
     try:
         # Verifica l'esistenza del file
         if not os.path.exists(file_path):
-            print(f"Errore: File non trovato: {file_path}")
             print(f"Percorso assoluto cercato: {os.path.abspath(file_path)}")
             # Verifica se esiste la directory
             dir_path = os.path.dirname(file_path)
@@ -41,7 +40,6 @@ def load_csv_to_dataframe(file_path):
 
         # Carica il file CSV
         df = pd.read_csv(file_path)
-        print(f"Caricato con successo: {file_path} ({len(df)} righe)")
         return df
     except pd.errors.EmptyDataError:
         print(f"Errore: Il file {file_path} è vuoto.")

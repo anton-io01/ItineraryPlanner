@@ -27,9 +27,7 @@ class ItineraryAgent:
 
     def train(self, num_episodes=100):
         """Addestra l'agente per un numero specificato di episodi"""
-        print(f"Inizio addestramento con {num_episodes} episodi...")
         for episode in range(num_episodes):
-            print(f"Iniziando episodio {episode + 1}...")
             start_time = time.time()
 
             # Reinizializza l'ambiente MDP
@@ -52,7 +50,6 @@ class ItineraryAgent:
 
             while not done:
                 step += 1
-                print(f"Episodio {episode + 1}, Step {step}: Selezionando azione...")
 
                 # Termina se troppe iterazioni
                 if step > 100:  # Limite massimo di step per episodio

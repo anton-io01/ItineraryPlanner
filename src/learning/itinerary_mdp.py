@@ -19,7 +19,6 @@ class ItineraryMDP:
         self.uncertainty_model = uncertainty_model
 
         # Ottieni il profilo del turista
-        print(f"Ottenendo profilo del turista {tourist_id}...")
         self.tourist = reasoner.get_tourist_by_id(tourist_id)
         if not self.tourist:
             print(f"ATTENZIONE: Turista {tourist_id} non trovato!")
@@ -27,14 +26,12 @@ class ItineraryMDP:
             return
 
         # Ottieni le attrazioni rilevanti (filtro iniziale)
-        print("Cercando attrazioni rilevanti...")
         interest_types = self.tourist.hasInterest
         matching_attractions = []
 
         try:
             # Ottieni tutte le attrazioni dalla ontologia
             all_attractions = self.reasoner.onto.Attraction.instances()
-            print(f"Trovate {len(all_attractions)} attrazioni totali")
 
             # Filtra attrazioni per interessi
             for attraction in all_attractions:

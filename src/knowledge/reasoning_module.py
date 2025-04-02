@@ -11,7 +11,6 @@ class DatalogReasoner:
         """Inizializza il reasoner Datalog"""
         # Crea la knowledge base
         self.kb = KB([])
-        print("Inizializzazione reasoner Datalog...")
 
         # Carica i dati
         attractions_df = load_attractions()

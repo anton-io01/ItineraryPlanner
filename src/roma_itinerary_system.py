@@ -17,22 +17,15 @@ class RomaItinerarySystem:
         start_time = time.time()
 
         # Carica i dati CSV
-        print("Caricamento dati...")
         self.attractions_df = load_attractions()
         self.tourists_df = load_tourists()
-
-        # Inizializza il reasoner Datalog (non richiede Java)
-        print("Inizializzazione reasoner Datalog...")
         self.reasoner = DatalogReasoner()
 
         # Inizializza modello di incertezza
-        print("Creazione modello di incertezza...")
         self.uncertainty_model = UncertaintyModel()
 
         # Dizionario per agenti RL addestrati
         self.agents = {}
-
-        print(f"Sistema inizializzato in {time.time() - start_time:.2f} secondi!")
 
     def print_itinerary(self, itinerary):
         """Stampa un itinerario in formato leggibile"""
