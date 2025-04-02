@@ -1,5 +1,3 @@
-import random
-import math
 import time
 from geopy.distance import geodesic
 

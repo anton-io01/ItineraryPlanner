@@ -1,5 +1,3 @@
-# src/roma_itinerary_system.py
-import os
 import time
 
 from src.data.data_manager import load_attractions, load_tourists, get_tourist_profile, get_attraction_details

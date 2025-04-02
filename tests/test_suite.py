@@ -676,6 +676,531 @@ class BeliefNetworkTester:
 
         return results
 
+class AStarTester:
+    def __init__(self):
+        """Inizializza il tester per l'algoritmo A*"""
+        print("\n" + "=" * 80)
+        print("INIZIALIZZAZIONE TESTER A*")
+        print("=" * 80)
+
+        # Carica i dati
+        self.attractions_df = load_attractions()
+        self.tourists_df = load_tourists()
+
+        # Inizializza il reasoner e il modello di incertezza
+        self.reasoner = DatalogReasoner()
+        self.uncertainty_model = UncertaintyModel()
+
+        print("Tester A* inizializzato")
+
+    def _create_simple_greedy_search(self, attractions, start_location, available_time, uncertainty_model, evidence):
+        """Implementa un algoritmo greedy semplice per confronto"""
+        result = []
+        current_location = start_location
+        time_remaining = available_time
+        unvisited = attractions.copy()
+
+        # Fattore di traffico
+        traffic_factor = uncertainty_model.get_travel_time_factor(evidence)
+
+        while unvisited and time_remaining > 0:
+            # Trova l'attrazione più vicina
+            best_attraction = None
+            min_distance = float('inf')
+
+            for attraction in unvisited:
+                # Calcola la distanza
+                from_coords = current_location
+                to_coords = (attraction['lat'], attraction['lon'])
+
+                from geopy.distance import geodesic
+                distance = geodesic(from_coords, to_coords).kilometers
+
+                if distance < min_distance:
+                    min_distance = distance
+                    best_attraction = attraction
+
+            # Calcola il tempo necessario
+            travel_time = min_distance * 15 * traffic_factor
+            wait_time = uncertainty_model.get_wait_time(evidence)
+            visit_time = best_attraction['visit_time']
+            total_time = travel_time + wait_time + visit_time
+
+            # Verifica se c'è abbastanza tempo
+            if total_time <= time_remaining:
+                # Aggiungi all'itinerario
+                best_attraction_copy = best_attraction.copy()
+                best_attraction_copy['travel_time'] = travel_time
+                best_attraction_copy['wait_time'] = wait_time
+                result.append(best_attraction_copy)
+
+                # Aggiorna stato
+                current_location = (best_attraction['lat'], best_attraction['lon'])
+                time_remaining -= total_time
+                unvisited.remove(best_attraction)
+            else:
+                # Non c'è abbastanza tempo per altre attrazioni
+                break
+
+        return result
+
+    def _create_random_search(self, attractions, start_location, available_time, uncertainty_model, evidence):
+        """Implementa un algoritmo casuale per confronto"""
+        result = []
+        current_location = start_location
+        time_remaining = available_time
+        unvisited = attractions.copy()
+
+        # Mischia le attrazioni
+        random.shuffle(unvisited)
+
+        # Fattore di traffico
+        traffic_factor = uncertainty_model.get_travel_time_factor(evidence)
+
+        for attraction in unvisited:
+            # Calcola il tempo necessario
+            from_coords = current_location
+            to_coords = (attraction['lat'], attraction['lon'])
+
+            from geopy.distance import geodesic
+            distance = geodesic(from_coords, to_coords).kilometers
+
+            travel_time = distance * 15 * traffic_factor
+            wait_time = uncertainty_model.get_wait_time(evidence)
+            visit_time = attraction['visit_time']
+            total_time = travel_time + wait_time + visit_time
+
+            # Verifica se c'è abbastanza tempo
+            if total_time <= time_remaining:
+                # Aggiungi all'itinerario
+                attraction_copy = attraction.copy()
+                attraction_copy['travel_time'] = travel_time
+                attraction_copy['wait_time'] = wait_time
+                result.append(attraction_copy)
+
+                # Aggiorna stato
+                current_location = (attraction['lat'], attraction['lon'])
+                time_remaining -= total_time
+            else:
+                # Non c'è abbastanza tempo per questa attrazione
+                continue
+
+        return result
+
+    def _prepare_test_data(self, tourist_id="1", num_attractions=10):
+        """Prepara i dati di test"""
+        # Ottieni il profilo del turista
+        tourist_profile = None
+        for _, row in self.tourists_df.iterrows():
+            if str(row['id_turista']) == tourist_id:
+                tourist_profile = row
+                break
+
+        if tourist_profile is None:
+            raise ValueError(f"Turista con ID {tourist_id} non trovato")
+
+        # Determina gli interessi del turista
+        interests = []
+        if tourist_profile['arte'] > 5:
+            interests.append('arte')
+        if tourist_profile['storia'] > 5:
+            interests.append('storia')
+        if tourist_profile['natura'] > 5:
+            interests.append('natura')
+        if tourist_profile['divertimento'] > 5:
+            interests.append('divertimento')
+
+        # Seleziona attrazioni compatibili
+        attractions = []
+        for _, row in self.attractions_df.iterrows():
+            categoria = row['categoria'].lower()
+            if categoria in interests:
+                attractions.append({
+                    'id': str(row['id_attrazione']),
+                    'name': row['nome'],
+                    'lat': row['latitudine'],
+                    'lon': row['longitudine'],
+                    'visit_time': row['tempo_visita'],
+                    'cost': row['costo'],
+                    'rating': row['recensione_media'],
+                    'categoria': categoria
+                })
+
+        # Limita il numero di attrazioni
+        if len(attractions) > num_attractions:
+            # Ordina per rating e prendi le migliori
+            attractions.sort(key=lambda x: x['rating'], reverse=True)
+            attractions = attractions[:num_attractions]
+
+        return attractions, tourist_profile['tempo']
+
+    def test_algorithm_comparison(self, tourist_ids=["1", "2", "5"], repeat=2):
+        """Confronto tra A*, greedy e random"""
+        print("\nTest confronto algoritmi...")
+
+        # Punto di partenza (centro di Roma)
+        start_location = (41.9028, 12.4964)
+
+        # Condizioni da testare
+        evidence = {
+            self.uncertainty_model.time_of_day: "afternoon",
+            self.uncertainty_model.day_of_week: "weekday"
+        }
+
+        results = []
+
+        for tourist_id in tourist_ids:
+            print(f"Testing per turista {tourist_id}...")
+
+            for _ in range(repeat):
+                try:
+                    # Prepara i dati di test
+                    attractions, available_time = self._prepare_test_data(tourist_id)
+
+                    # Test A*
+                    start_time = time.time()
+                    itinerary_problem = ItinerarySearch(
+                        attractions,
+                        start_location,
+                        self.uncertainty_model,
+                        available_time,
+                        evidence
+                    )
+                    astar_searcher = AStarSearcher(itinerary_problem)
+                    path = astar_searcher.search()
+                    astar_time = (time.time() - start_time) * 1000  # ms
+
+                    if path:
+                        astar_itinerary = []
+                        for arc in path.arcs():
+                            if arc.to_node != "start":
+                                for attr in attractions:
+                                    if attr['id'] == arc.to_node:
+                                        attr_copy = attr.copy()
+                                        # Aggiungi tempi di attesa e viaggio
+                                        attr_copy['wait_time'] = self.uncertainty_model.get_wait_time(evidence)
+                                        attr_copy['travel_time'] = arc.cost - attr_copy['visit_time'] - attr_copy[
+                                            'wait_time']
+                                        astar_itinerary.append(attr_copy)
+                                        break
+                    else:
+                        astar_itinerary = []
+
+                    # Test Greedy
+                    start_time = time.time()
+                    greedy_itinerary = self._create_simple_greedy_search(
+                        attractions,
+                        start_location,
+                        available_time,
+                        self.uncertainty_model,
+                        evidence
+                    )
+                    greedy_time = (time.time() - start_time) * 1000  # ms
+
+                    # Test Random
+                    start_time = time.time()
+                    random_itinerary = self._create_random_search(
+                        attractions,
+                        start_location,
+                        available_time,
+                        self.uncertainty_model,
+                        evidence
+                    )
+                    random_time = (time.time() - start_time) * 1000  # ms
+
+                    # Calcola metriche
+                    astar_count = len(astar_itinerary)
+                    greedy_count = len(greedy_itinerary)
+                    random_count = len(random_itinerary)
+
+                    if astar_count > 0:
+                        astar_rating = sum(a['rating'] for a in astar_itinerary) / astar_count
+                    else:
+                        astar_rating = 0
+
+                    if greedy_count > 0:
+                        greedy_rating = sum(a['rating'] for a in greedy_itinerary) / greedy_count
+                    else:
+                        greedy_rating = 0
+
+                    if random_count > 0:
+                        random_rating = sum(a['rating'] for a in random_itinerary) / random_count
+                    else:
+                        random_rating = 0
+
+                    astar_time_used = sum(a['visit_time'] + a.get('wait_time', 0) + a.get('travel_time', 0)
+                                          for a in astar_itinerary)
+                    greedy_time_used = sum(a['visit_time'] + a.get('wait_time', 0) + a.get('travel_time', 0)
+                                           for a in greedy_itinerary)
+                    random_time_used = sum(a['visit_time'] + a.get('wait_time', 0) + a.get('travel_time', 0)
+                                           for a in random_itinerary)
+
+                    astar_time_unused = available_time - astar_time_used
+                    greedy_time_unused = available_time - greedy_time_used
+                    random_time_unused = available_time - random_time_used
+
+                    result = {
+                        "Turista": tourist_id,
+                        "Algoritmo": "A*",
+                        "Tempo esecuzione (ms)": round(astar_time, 2),
+                        "Attrazioni visitate": astar_count,
+                        "Valutazione media": round(astar_rating, 2),
+                        "Tempo non utilizzato (min)": round(astar_time_unused, 1)
+                    }
+                    results.append(result)
+
+                    result = {
+                        "Turista": tourist_id,
+                        "Algoritmo": "Greedy",
+                        "Tempo esecuzione (ms)": round(greedy_time, 2),
+                        "Attrazioni visitate": greedy_count,
+                        "Valutazione media": round(greedy_rating, 2),
+                        "Tempo non utilizzato (min)": round(greedy_time_unused, 1)
+                    }
+                    results.append(result)
+
+                    result = {
+                        "Turista": tourist_id,
+                        "Algoritmo": "Random",
+                        "Tempo esecuzione (ms)": round(random_time, 2),
+                        "Attrazioni visitate": random_count,
+                        "Valutazione media": round(random_rating, 2),
+                        "Tempo non utilizzato (min)": round(random_time_unused, 1)
+                    }
+                    results.append(result)
+
+                except Exception as e:
+                    print(f"Errore durante il test per turista {tourist_id}: {e}")
+                    # Aggiungi risultati simulati per non bloccare i test
+                    for algo in ["A*", "Greedy", "Random"]:
+                        results.append({
+                            "Turista": tourist_id,
+                            "Algoritmo": algo,
+                            "Tempo esecuzione (ms)": 0,
+                            "Attrazioni visitate": 0,
+                            "Valutazione media": 0,
+                            "Tempo non utilizzato (min)": 0
+                        })
+
+        # Salva risultati
+        df = save_results_to_csv(results, "astar_algorithm_comparison.csv")
+
+        try:
+            # Crea grafici di confronto
+            # 1. Tempo di esecuzione
+            df_agg = df.groupby('Algoritmo').agg({
+                'Tempo esecuzione (ms)': 'mean',
+                'Attrazioni visitate': 'mean',
+                'Valutazione media': 'mean',
+                'Tempo non utilizzato (min)': 'mean'
+            }).reset_index()
+
+            create_bar_chart(
+                df_agg,
+                "Algoritmo",
+                "Tempo esecuzione (ms)",
+                "Confronto Tempo di Esecuzione tra Algoritmi",
+                "Algoritmo",
+                "Tempo medio (ms)",
+                "astar_execution_time.png",
+                color='lightblue'
+            )
+
+            # 2. Attrazioni visitate
+            create_bar_chart(
+                df_agg,
+                "Algoritmo",
+                "Attrazioni visitate",
+                "Confronto Numero di Attrazioni Visitate",
+                "Algoritmo",
+                "Numero medio di attrazioni",
+                "astar_attractions_count.png",
+                color='lightgreen'
+            )
+
+            # 3. Valutazione media
+            create_bar_chart(
+                df_agg,
+                "Algoritmo",
+                "Valutazione media",
+                "Confronto Valutazione Media delle Attrazioni",
+                "Algoritmo",
+                "Valutazione media",
+                "astar_rating.png",
+                color='#ffcc99'
+            )
+
+            # 4. Tempo non utilizzato
+            create_bar_chart(
+                df_agg,
+                "Algoritmo",
+                "Tempo non utilizzato (min)",
+                "Confronto Tempo Non Utilizzato",
+                "Algoritmo",
+                "Tempo medio (min)",
+                "astar_unused_time.png",
+                color='#ff9999'
+            )
+        except Exception as e:
+            print(f"Errore nella creazione dei grafici: {e}")
+
+        return results
+
+    def test_computational_performance(self, num_attractions_range=range(5, 16, 2)):
+        """Test delle prestazioni computazionali di A* con numero crescente di attrazioni"""
+        print("\nTest prestazioni computazionali A*...")
+
+        # Punto di partenza (centro di Roma)
+        start_location = (41.9028, 12.4964)
+
+        # Condizioni da testare
+        evidence = {
+            self.uncertainty_model.time_of_day: "afternoon",
+            self.uncertainty_model.day_of_week: "weekday"
+        }
+
+        # Turista di test
+        tourist_id = "2"  # Un turista con interessi variegati
+
+        results = []
+
+        for num_attractions in num_attractions_range:
+            print(f"Testing con {num_attractions} attrazioni...")
+
+            try:
+                # Prepara i dati di test
+                attractions, available_time = self._prepare_test_data(tourist_id, num_attractions)
+
+                # Misura tempo e memoria
+                start_time = time.time()
+
+                # Crea il problema di ricerca
+                itinerary_problem = ItinerarySearch(
+                    attractions,
+                    start_location,
+                    self.uncertainty_model,
+                    available_time,
+                    evidence
+                )
+
+                # Esegui A*
+                astar_searcher = AStarSearcher(itinerary_problem)
+                path = astar_searcher.search()
+
+                # Calcola tempo
+                execution_time = (time.time() - start_time) * 1000  # ms
+
+                # Calcola metriche
+                if path:
+                    path_length = len(path.arcs())
+                    # Qui si potrebbe aggiungere altro se l'algoritmo tiene traccia
+                    # del numero di nodi esplorati, ma non è disponibile nell'implementazione attuale
+                    nodes_explored = path_length * 3  # stima approssimativa
+                else:
+                    path_length = 0
+                    nodes_explored = 0
+
+                result = {
+                    "Numero attrazioni": num_attractions,
+                    "Tempo esecuzione (ms)": round(execution_time, 2),
+                    "Lunghezza percorso": path_length,
+                    "Nodi esplorati (stima)": nodes_explored
+                }
+
+                results.append(result)
+            except Exception as e:
+                print(f"Errore nel test con {num_attractions} attrazioni: {e}")
+                # Aggiungi risultato simulato per non bloccare i test
+                results.append({
+                    "Numero attrazioni": num_attractions,
+                    "Tempo esecuzione (ms)": 0,
+                    "Lunghezza percorso": 0,
+                    "Nodi esplorati (stima)": 0
+                })
+
+        # Salva risultati
+        df = save_results_to_csv(results, "astar_computational_performance.csv")
+
+        try:
+            # Crea grafico
+            plt.figure(figsize=(10, 6))
+            plt.plot(df["Numero attrazioni"], df["Tempo esecuzione (ms)"], marker='o', label='Tempo esecuzione')
+            plt.title("Prestazioni Computazionali di A*")
+            plt.xlabel("Numero di attrazioni")
+            plt.ylabel("Tempo di esecuzione (ms)")
+            plt.grid(True, linestyle='--', alpha=0.7)
+            plt.tight_layout()
+            file_path = os.path.join(RESULTS_DIR, "astar_computational_performance.png")
+            plt.savefig(file_path)
+            plt.close()
+
+            # Crea grafico per nodi esplorati
+            plt.figure(figsize=(10, 6))
+            plt.plot(df["Numero attrazioni"], df["Nodi esplorati (stima)"], marker='s', label='Nodi esplorati')
+            plt.title("Nodi Esplorati da A*")
+            plt.xlabel("Numero di attrazioni")
+            plt.ylabel("Numero di nodi (stima)")
+            plt.grid(True, linestyle='--', alpha=0.7)
+            plt.tight_layout()
+            file_path = os.path.join(RESULTS_DIR, "astar_nodes_explored.png")
+            plt.savefig(file_path)
+            plt.close()
+        except Exception as e:
+            print(f"Errore nella creazione dei grafici: {e}")
+
+        return results
+
+    def test_heuristic_impact(self, tourist_id="3", num_attractions=10):
+        """Test dell'impatto delle diverse versioni dell'euristica"""
+        print("\nTest impatto euristica...")
+
+        # Questo test è più teorico perché richiederebbe modificare l'implementazione
+        # dell'euristica nella classe ItinerarySearch. Qui ci limitiamo a simulare
+        # diverse versioni dell'euristica modificando i pesi dei componenti.
+
+        # Definiamo tre versioni "teoriche" dell'euristica
+        heuristics = [
+            {"nome": "Base", "Descrizione": "Solo tempo visita",
+             "Efficienza": 0.6, "Nodi esplorati": 42, "Ottimalità": 0.8},
+            {"nome": "Intermedia", "Descrizione": "Tempo visita + attesa",
+             "Efficienza": 0.75, "Nodi esplorati": 35, "Ottimalità": 0.9},
+            {"nome": "Completa", "Descrizione": "Tempo visita + attesa + viaggio (MST)",
+             "Efficienza": 0.9, "Nodi esplorati": 28, "Ottimalità": 1.0},
+        ]
+
+        # Salva risultati
+        df = pd.DataFrame(heuristics)
+        df.to_csv(os.path.join(RESULTS_DIR, "astar_heuristic_impact.csv"), index=False)
+
+        try:
+            # Crea grafico per nodi esplorati
+            create_bar_chart(
+                df,
+                "nome",
+                "Nodi esplorati",
+                "Impatto dell'Euristica sul Numero di Nodi Esplorati",
+                "Versione Euristica",
+                "Nodi esplorati",
+                "astar_heuristic_nodes.png",
+                color='#6699cc'
+            )
+
+            # Crea grafico per efficienza
+            create_bar_chart(
+                df,
+                "nome",
+                "Efficienza",
+                "Efficienza delle Diverse Versioni dell'Euristica",
+                "Versione Euristica",
+                "Efficienza (0-1)",
+                "astar_heuristic_efficiency.png",
+                color='#66cc99'
+            )
+        except Exception as e:
+            print(f"Errore nella creazione dei grafici: {e}")
+
+        return heuristics
+
 # ------------------------------------------------
 # 4. TEST DELL'APPRENDIMENTO PER RINFORZO
 # ------------------------------------------------
@@ -1339,531 +1864,6 @@ class BeliefNetworkTester:
 # ------------------------------------------------
 # 3. TEST DELL'ALGORITMO A*
 # ------------------------------------------------
-
-class AStarTester:
-    def __init__(self):
-        """Inizializza il tester per l'algoritmo A*"""
-        print("\n" + "=" * 80)
-        print("INIZIALIZZAZIONE TESTER A*")
-        print("=" * 80)
-
-        # Carica i dati
-        self.attractions_df = load_attractions()
-        self.tourists_df = load_tourists()
-
-        # Inizializza il reasoner e il modello di incertezza
-        self.reasoner = DatalogReasoner()
-        self.uncertainty_model = UncertaintyModel()
-
-        print("Tester A* inizializzato")
-
-    def _create_simple_greedy_search(self, attractions, start_location, available_time, uncertainty_model, evidence):
-        """Implementa un algoritmo greedy semplice per confronto"""
-        result = []
-        current_location = start_location
-        time_remaining = available_time
-        unvisited = attractions.copy()
-
-        # Fattore di traffico
-        traffic_factor = uncertainty_model.get_travel_time_factor(evidence)
-
-        while unvisited and time_remaining > 0:
-            # Trova l'attrazione più vicina
-            best_attraction = None
-            min_distance = float('inf')
-
-            for attraction in unvisited:
-                # Calcola la distanza
-                from_coords = current_location
-                to_coords = (attraction['lat'], attraction['lon'])
-
-                from geopy.distance import geodesic
-                distance = geodesic(from_coords, to_coords).kilometers
-
-                if distance < min_distance:
-                    min_distance = distance
-                    best_attraction = attraction
-
-            # Calcola il tempo necessario
-            travel_time = min_distance * 15 * traffic_factor
-            wait_time = uncertainty_model.get_wait_time(evidence)
-            visit_time = best_attraction['visit_time']
-            total_time = travel_time + wait_time + visit_time
-
-            # Verifica se c'è abbastanza tempo
-            if total_time <= time_remaining:
-                # Aggiungi all'itinerario
-                best_attraction_copy = best_attraction.copy()
-                best_attraction_copy['travel_time'] = travel_time
-                best_attraction_copy['wait_time'] = wait_time
-                result.append(best_attraction_copy)
-
-                # Aggiorna stato
-                current_location = (best_attraction['lat'], best_attraction['lon'])
-                time_remaining -= total_time
-                unvisited.remove(best_attraction)
-            else:
-                # Non c'è abbastanza tempo per altre attrazioni
-                break
-
-        return result
-
-    def _create_random_search(self, attractions, start_location, available_time, uncertainty_model, evidence):
-        """Implementa un algoritmo casuale per confronto"""
-        result = []
-        current_location = start_location
-        time_remaining = available_time
-        unvisited = attractions.copy()
-
-        # Mischia le attrazioni
-        random.shuffle(unvisited)
-
-        # Fattore di traffico
-        traffic_factor = uncertainty_model.get_travel_time_factor(evidence)
-
-        for attraction in unvisited:
-            # Calcola il tempo necessario
-            from_coords = current_location
-            to_coords = (attraction['lat'], attraction['lon'])
-
-            from geopy.distance import geodesic
-            distance = geodesic(from_coords, to_coords).kilometers
-
-            travel_time = distance * 15 * traffic_factor
-            wait_time = uncertainty_model.get_wait_time(evidence)
-            visit_time = attraction['visit_time']
-            total_time = travel_time + wait_time + visit_time
-
-            # Verifica se c'è abbastanza tempo
-            if total_time <= time_remaining:
-                # Aggiungi all'itinerario
-                attraction_copy = attraction.copy()
-                attraction_copy['travel_time'] = travel_time
-                attraction_copy['wait_time'] = wait_time
-                result.append(attraction_copy)
-
-                # Aggiorna stato
-                current_location = (attraction['lat'], attraction['lon'])
-                time_remaining -= total_time
-            else:
-                # Non c'è abbastanza tempo per questa attrazione
-                continue
-
-        return result
-
-    def _prepare_test_data(self, tourist_id="1", num_attractions=10):
-        """Prepara i dati di test"""
-        # Ottieni il profilo del turista
-        tourist_profile = None
-        for _, row in self.tourists_df.iterrows():
-            if str(row['id_turista']) == tourist_id:
-                tourist_profile = row
-                break
-
-        if tourist_profile is None:
-            raise ValueError(f"Turista con ID {tourist_id} non trovato")
-
-        # Determina gli interessi del turista
-        interests = []
-        if tourist_profile['arte'] > 5:
-            interests.append('arte')
-        if tourist_profile['storia'] > 5:
-            interests.append('storia')
-        if tourist_profile['natura'] > 5:
-            interests.append('natura')
-        if tourist_profile['divertimento'] > 5:
-            interests.append('divertimento')
-
-        # Seleziona attrazioni compatibili
-        attractions = []
-        for _, row in self.attractions_df.iterrows():
-            categoria = row['categoria'].lower()
-            if categoria in interests:
-                attractions.append({
-                    'id': str(row['id_attrazione']),
-                    'name': row['nome'],
-                    'lat': row['latitudine'],
-                    'lon': row['longitudine'],
-                    'visit_time': row['tempo_visita'],
-                    'cost': row['costo'],
-                    'rating': row['recensione_media'],
-                    'categoria': categoria
-                })
-
-        # Limita il numero di attrazioni
-        if len(attractions) > num_attractions:
-            # Ordina per rating e prendi le migliori
-            attractions.sort(key=lambda x: x['rating'], reverse=True)
-            attractions = attractions[:num_attractions]
-
-        return attractions, tourist_profile['tempo']
-
-    def test_algorithm_comparison(self, tourist_ids=["1", "2", "5"], repeat=2):
-        """Confronto tra A*, greedy e random"""
-        print("\nTest confronto algoritmi...")
-
-        # Punto di partenza (centro di Roma)
-        start_location = (41.9028, 12.4964)
-
-        # Condizioni da testare
-        evidence = {
-            self.uncertainty_model.time_of_day: "afternoon",
-            self.uncertainty_model.day_of_week: "weekday"
-        }
-
-        results = []
-
-        for tourist_id in tourist_ids:
-            print(f"Testing per turista {tourist_id}...")
-
-            for _ in range(repeat):
-                try:
-                    # Prepara i dati di test
-                    attractions, available_time = self._prepare_test_data(tourist_id)
-
-                    # Test A*
-                    start_time = time.time()
-                    itinerary_problem = ItinerarySearch(
-                        attractions,
-                        start_location,
-                        self.uncertainty_model,
-                        available_time,
-                        evidence
-                    )
-                    astar_searcher = AStarSearcher(itinerary_problem)
-                    path = astar_searcher.search()
-                    astar_time = (time.time() - start_time) * 1000  # ms
-
-                    if path:
-                        astar_itinerary = []
-                        for arc in path.arcs():
-                            if arc.to_node != "start":
-                                for attr in attractions:
-                                    if attr['id'] == arc.to_node:
-                                        attr_copy = attr.copy()
-                                        # Aggiungi tempi di attesa e viaggio
-                                        attr_copy['wait_time'] = self.uncertainty_model.get_wait_time(evidence)
-                                        attr_copy['travel_time'] = arc.cost - attr_copy['visit_time'] - attr_copy[
-                                            'wait_time']
-                                        astar_itinerary.append(attr_copy)
-                                        break
-                    else:
-                        astar_itinerary = []
-
-                    # Test Greedy
-                    start_time = time.time()
-                    greedy_itinerary = self._create_simple_greedy_search(
-                        attractions,
-                        start_location,
-                        available_time,
-                        self.uncertainty_model,
-                        evidence
-                    )
-                    greedy_time = (time.time() - start_time) * 1000  # ms
-
-                    # Test Random
-                    start_time = time.time()
-                    random_itinerary = self._create_random_search(
-                        attractions,
-                        start_location,
-                        available_time,
-                        self.uncertainty_model,
-                        evidence
-                    )
-                    random_time = (time.time() - start_time) * 1000  # ms
-
-                    # Calcola metriche
-                    astar_count = len(astar_itinerary)
-                    greedy_count = len(greedy_itinerary)
-                    random_count = len(random_itinerary)
-
-                    if astar_count > 0:
-                        astar_rating = sum(a['rating'] for a in astar_itinerary) / astar_count
-                    else:
-                        astar_rating = 0
-
-                    if greedy_count > 0:
-                        greedy_rating = sum(a['rating'] for a in greedy_itinerary) / greedy_count
-                    else:
-                        greedy_rating = 0
-
-                    if random_count > 0:
-                        random_rating = sum(a['rating'] for a in random_itinerary) / random_count
-                    else:
-                        random_rating = 0
-
-                    astar_time_used = sum(a['visit_time'] + a.get('wait_time', 0) + a.get('travel_time', 0)
-                                          for a in astar_itinerary)
-                    greedy_time_used = sum(a['visit_time'] + a.get('wait_time', 0) + a.get('travel_time', 0)
-                                           for a in greedy_itinerary)
-                    random_time_used = sum(a['visit_time'] + a.get('wait_time', 0) + a.get('travel_time', 0)
-                                           for a in random_itinerary)
-
-                    astar_time_unused = available_time - astar_time_used
-                    greedy_time_unused = available_time - greedy_time_used
-                    random_time_unused = available_time - random_time_used
-
-                    result = {
-                        "Turista": tourist_id,
-                        "Algoritmo": "A*",
-                        "Tempo esecuzione (ms)": round(astar_time, 2),
-                        "Attrazioni visitate": astar_count,
-                        "Valutazione media": round(astar_rating, 2),
-                        "Tempo non utilizzato (min)": round(astar_time_unused, 1)
-                    }
-                    results.append(result)
-
-                    result = {
-                        "Turista": tourist_id,
-                        "Algoritmo": "Greedy",
-                        "Tempo esecuzione (ms)": round(greedy_time, 2),
-                        "Attrazioni visitate": greedy_count,
-                        "Valutazione media": round(greedy_rating, 2),
-                        "Tempo non utilizzato (min)": round(greedy_time_unused, 1)
-                    }
-                    results.append(result)
-
-                    result = {
-                        "Turista": tourist_id,
-                        "Algoritmo": "Random",
-                        "Tempo esecuzione (ms)": round(random_time, 2),
-                        "Attrazioni visitate": random_count,
-                        "Valutazione media": round(random_rating, 2),
-                        "Tempo non utilizzato (min)": round(random_time_unused, 1)
-                    }
-                    results.append(result)
-
-                except Exception as e:
-                    print(f"Errore durante il test per turista {tourist_id}: {e}")
-                    # Aggiungi risultati simulati per non bloccare i test
-                    for algo in ["A*", "Greedy", "Random"]:
-                        results.append({
-                            "Turista": tourist_id,
-                            "Algoritmo": algo,
-                            "Tempo esecuzione (ms)": 0,
-                            "Attrazioni visitate": 0,
-                            "Valutazione media": 0,
-                            "Tempo non utilizzato (min)": 0
-                        })
-
-        # Salva risultati
-        df = save_results_to_csv(results, "astar_algorithm_comparison.csv")
-
-        try:
-            # Crea grafici di confronto
-            # 1. Tempo di esecuzione
-            df_agg = df.groupby('Algoritmo').agg({
-                'Tempo esecuzione (ms)': 'mean',
-                'Attrazioni visitate': 'mean',
-                'Valutazione media': 'mean',
-                'Tempo non utilizzato (min)': 'mean'
-            }).reset_index()
-
-            create_bar_chart(
-                df_agg,
-                "Algoritmo",
-                "Tempo esecuzione (ms)",
-                "Confronto Tempo di Esecuzione tra Algoritmi",
-                "Algoritmo",
-                "Tempo medio (ms)",
-                "astar_execution_time.png",
-                color='lightblue'
-            )
-
-            # 2. Attrazioni visitate
-            create_bar_chart(
-                df_agg,
-                "Algoritmo",
-                "Attrazioni visitate",
-                "Confronto Numero di Attrazioni Visitate",
-                "Algoritmo",
-                "Numero medio di attrazioni",
-                "astar_attractions_count.png",
-                color='lightgreen'
-            )
-
-            # 3. Valutazione media
-            create_bar_chart(
-                df_agg,
-                "Algoritmo",
-                "Valutazione media",
-                "Confronto Valutazione Media delle Attrazioni",
-                "Algoritmo",
-                "Valutazione media",
-                "astar_rating.png",
-                color='#ffcc99'
-            )
-
-            # 4. Tempo non utilizzato
-            create_bar_chart(
-                df_agg,
-                "Algoritmo",
-                "Tempo non utilizzato (min)",
-                "Confronto Tempo Non Utilizzato",
-                "Algoritmo",
-                "Tempo medio (min)",
-                "astar_unused_time.png",
-                color='#ff9999'
-            )
-        except Exception as e:
-            print(f"Errore nella creazione dei grafici: {e}")
-
-        return results
-
-    def test_computational_performance(self, num_attractions_range=range(5, 16, 2)):
-        """Test delle prestazioni computazionali di A* con numero crescente di attrazioni"""
-        print("\nTest prestazioni computazionali A*...")
-
-        # Punto di partenza (centro di Roma)
-        start_location = (41.9028, 12.4964)
-
-        # Condizioni da testare
-        evidence = {
-            self.uncertainty_model.time_of_day: "afternoon",
-            self.uncertainty_model.day_of_week: "weekday"
-        }
-
-        # Turista di test
-        tourist_id = "2"  # Un turista con interessi variegati
-
-        results = []
-
-        for num_attractions in num_attractions_range:
-            print(f"Testing con {num_attractions} attrazioni...")
-
-            try:
-                # Prepara i dati di test
-                attractions, available_time = self._prepare_test_data(tourist_id, num_attractions)
-
-                # Misura tempo e memoria
-                start_time = time.time()
-
-                # Crea il problema di ricerca
-                itinerary_problem = ItinerarySearch(
-                    attractions,
-                    start_location,
-                    self.uncertainty_model,
-                    available_time,
-                    evidence
-                )
-
-                # Esegui A*
-                astar_searcher = AStarSearcher(itinerary_problem)
-                path = astar_searcher.search()
-
-                # Calcola tempo
-                execution_time = (time.time() - start_time) * 1000  # ms
-
-                # Calcola metriche
-                if path:
-                    path_length = len(path.arcs())
-                    # Qui si potrebbe aggiungere altro se l'algoritmo tiene traccia
-                    # del numero di nodi esplorati, ma non è disponibile nell'implementazione attuale
-                    nodes_explored = path_length * 3  # stima approssimativa
-                else:
-                    path_length = 0
-                    nodes_explored = 0
-
-                result = {
-                    "Numero attrazioni": num_attractions,
-                    "Tempo esecuzione (ms)": round(execution_time, 2),
-                    "Lunghezza percorso": path_length,
-                    "Nodi esplorati (stima)": nodes_explored
-                }
-
-                results.append(result)
-            except Exception as e:
-                print(f"Errore nel test con {num_attractions} attrazioni: {e}")
-                # Aggiungi risultato simulato per non bloccare i test
-                results.append({
-                    "Numero attrazioni": num_attractions,
-                    "Tempo esecuzione (ms)": 0,
-                    "Lunghezza percorso": 0,
-                    "Nodi esplorati (stima)": 0
-                })
-
-        # Salva risultati
-        df = save_results_to_csv(results, "astar_computational_performance.csv")
-
-        try:
-            # Crea grafico
-            plt.figure(figsize=(10, 6))
-            plt.plot(df["Numero attrazioni"], df["Tempo esecuzione (ms)"], marker='o', label='Tempo esecuzione')
-            plt.title("Prestazioni Computazionali di A*")
-            plt.xlabel("Numero di attrazioni")
-            plt.ylabel("Tempo di esecuzione (ms)")
-            plt.grid(True, linestyle='--', alpha=0.7)
-            plt.tight_layout()
-            file_path = os.path.join(RESULTS_DIR, "astar_computational_performance.png")
-            plt.savefig(file_path)
-            plt.close()
-
-            # Crea grafico per nodi esplorati
-            plt.figure(figsize=(10, 6))
-            plt.plot(df["Numero attrazioni"], df["Nodi esplorati (stima)"], marker='s', label='Nodi esplorati')
-            plt.title("Nodi Esplorati da A*")
-            plt.xlabel("Numero di attrazioni")
-            plt.ylabel("Numero di nodi (stima)")
-            plt.grid(True, linestyle='--', alpha=0.7)
-            plt.tight_layout()
-            file_path = os.path.join(RESULTS_DIR, "astar_nodes_explored.png")
-            plt.savefig(file_path)
-            plt.close()
-        except Exception as e:
-            print(f"Errore nella creazione dei grafici: {e}")
-
-        return results
-
-    def test_heuristic_impact(self, tourist_id="3", num_attractions=10):
-        """Test dell'impatto delle diverse versioni dell'euristica"""
-        print("\nTest impatto euristica...")
-
-        # Questo test è più teorico perché richiederebbe modificare l'implementazione
-        # dell'euristica nella classe ItinerarySearch. Qui ci limitiamo a simulare
-        # diverse versioni dell'euristica modificando i pesi dei componenti.
-
-        # Definiamo tre versioni "teoriche" dell'euristica
-        heuristics = [
-            {"nome": "Base", "Descrizione": "Solo tempo visita",
-             "Efficienza": 0.6, "Nodi esplorati": 42, "Ottimalità": 0.8},
-            {"nome": "Intermedia", "Descrizione": "Tempo visita + attesa",
-             "Efficienza": 0.75, "Nodi esplorati": 35, "Ottimalità": 0.9},
-            {"nome": "Completa", "Descrizione": "Tempo visita + attesa + viaggio (MST)",
-             "Efficienza": 0.9, "Nodi esplorati": 28, "Ottimalità": 1.0},
-        ]
-
-        # Salva risultati
-        df = pd.DataFrame(heuristics)
-        df.to_csv(os.path.join(RESULTS_DIR, "astar_heuristic_impact.csv"), index=False)
-
-        try:
-            # Crea grafico per nodi esplorati
-            create_bar_chart(
-                df,
-                "nome",
-                "Nodi esplorati",
-                "Impatto dell'Euristica sul Numero di Nodi Esplorati",
-                "Versione Euristica",
-                "Nodi esplorati",
-                "astar_heuristic_nodes.png",
-                color='#6699cc'
-            )
-
-            # Crea grafico per efficienza
-            create_bar_chart(
-                df,
-                "nome",
-                "Efficienza",
-                "Efficienza delle Diverse Versioni dell'Euristica",
-                "Versione Euristica",
-                "Efficienza (0-1)",
-                "astar_heuristic_efficiency.png",
-                color='#66cc99'
-            )
-        except Exception as e:
-            print(f"Errore nella creazione dei grafici: {e}")
-
-        return heuristics
 
 class AStarTester:
     def __init__(self):
