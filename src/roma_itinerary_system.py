@@ -2,9 +2,7 @@
 import os
 import time
 
-# Import dei moduli interni
 from src.data.data_manager import load_attractions, load_tourists, get_tourist_profile, get_attraction_details
-from src.knowledge.ontology_population import populate_ontology
 from src.knowledge.reasoning_module import DatalogReasoner
 from src.uncertainty.uncertainty_model import UncertaintyModel
 from src.learning.itinerary_agent import ItineraryAgent
