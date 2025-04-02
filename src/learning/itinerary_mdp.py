@@ -21,7 +21,6 @@ class ItineraryMDP:
         # Ottieni il profilo del turista
         self.tourist = reasoner.get_tourist_by_id(tourist_id)
         if not self.tourist:
-            print(f"ATTENZIONE: Turista {tourist_id} non trovato!")
             self.actions = []
             return
 
@@ -43,11 +42,9 @@ class ItineraryMDP:
                         matching_attractions.append(attraction)
                         break
 
-            print(f"Trovate {len(matching_attractions)} attrazioni corrispondenti agli interessi")
 
             # Se ci sono meno di 3 attrazioni, cerca attrazioni con tempo di visita breve
             if len(matching_attractions) < 3:
-                print("Trovate poche attrazioni, cercando attrazioni con tempo di visita breve...")
                 # Tempo disponibile del turista
                 available_time = self.tourist.hasAvailableTime[0] if hasattr(self.tourist,
                                                                              'hasAvailableTime') and self.tourist.hasAvailableTime else 480
@@ -62,7 +59,6 @@ class ItineraryMDP:
                     # Cerca l'attrazione per ID
                     short_attr = self.reasoner.onto.search_one(f"attraction_{numeric_id}")
                     if short_attr and short_attr not in matching_attractions:
-                        print(f"Aggiunta attrazione breve: {short_attr.name}")
                         matching_attractions.append(short_attr)
         except Exception as e:
             print(f"Errore nella ricerca delle attrazioni: {e}")
@@ -70,7 +66,6 @@ class ItineraryMDP:
 
         # Le azioni sono le attrazioni che possono essere aggiunte all'itinerario
         self.actions = [attr.name for attr in matching_attractions]
-        print(f"Azioni disponibili: {len(self.actions)}")
 
         # Stato iniziale: tempo disponibile e itinerario vuoto
         self.available_time = self.tourist.hasAvailableTime[0] if hasattr(self.tourist,
@@ -107,43 +102,33 @@ class ItineraryMDP:
     def do(self, action):
         """Esegue un'azione e restituisce reward e nuovo stato"""
         start_time = time.time()
-        print(f"MDP: Eseguendo azione {action}")
 
         # Verifica se l'azione è valida
         if action not in self.actions:
-            print(f"MDP: Azione non valida")
             return -10, self.state  # Penalità per azione non valida
 
         # Verifica se l'attrazione è già nell'itinerario
         if action in self.itinerary:
-            print(f"MDP: Attrazione già nell'itinerario")
             # Rimuovi l'azione dalle opzioni disponibili
             if action in self.actions:
                 self.actions.remove(action)
-                print(f"Rimossa azione {action} dalle azioni disponibili (già nell'itinerario)")
             return -5, self.state  # Penalità per ripetizione
 
         # Ottieni l'attrazione
-        print(f"MDP: Cercando attrazione {action}")
         attraction = self.reasoner.onto.search_one(iri=f"*{action}")
-        print(f"MDP: Attrazione trovata: {attraction is not None}")
 
         if not attraction:
-            print(f"MDP: Attrazione non trovata")
             # Rimuovi l'azione dalle opzioni disponibili
             if action in self.actions:
                 self.actions.remove(action)
-                print(f"Rimossa azione {action} dalle azioni disponibili (non trovata)")
             return -10, self.state
 
         # Calcola il tempo per la visita
         visit_time = attraction.hasEstimatedVisitTime[0] if hasattr(attraction,
                                                                     'hasEstimatedVisitTime') and attraction.hasEstimatedVisitTime else 60
-        print(f"MDP: Tempo visita: {visit_time}")
 
         # Calcola il tempo di attesa basato sul modello di incertezza
         wait_time = self.uncertainty_model.get_wait_time(self.evidence)
-        print(f"MDP: Tempo attesa: {wait_time}")
 
         # Calcola il tempo di viaggio
         travel_time = 30  # Default 30 minuti
@@ -161,7 +146,6 @@ class ItineraryMDP:
 
                     # Converti in tempo di viaggio (15 minuti per km, moltiplicato per il fattore di traffico)
                     travel_time = distance * 15 * self.traffic_factor
-                    print(f"MDP: Distanza: {distance:.2f} km, tempo viaggio: {travel_time:.2f} min")
                 except Exception as e:
                     print(f"MDP: Errore nel calcolo del tempo di viaggio: {e}")
                     travel_time = 30  # Default in caso di errore
@@ -170,15 +154,12 @@ class ItineraryMDP:
 
         # Tempo totale necessario
         total_time = visit_time + wait_time + travel_time
-        print(f"MDP: Tempo totale necessario: {total_time:.2f} min")
 
         # Verifica se c'è abbastanza tempo
         if self.available_time < total_time:
-            print(f"MDP: Tempo insufficiente. Disponibile: {self.available_time}, necessario: {total_time}")
             # Rimuovi l'azione dalle opzioni disponibili
             if action in self.actions:
                 self.actions.remove(action)
-                print(f"Rimossa azione {action} dalle azioni disponibili (tempo insufficiente)")
             return -5, self.state  # Penalità per tempo insufficiente
 
         # Aggiorna lo stato
@@ -192,7 +173,6 @@ class ItineraryMDP:
         self.reward += reward  # Accumula reward
 
         elapsed_time = time.time() - start_time
-        print(f"MDP: Azione completata in {elapsed_time:.2f} secondi. Reward: {reward}")
 
         return reward, self.state
 

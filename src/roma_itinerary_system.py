@@ -85,17 +85,12 @@ class RomaItinerarySystem:
             Lista di dizionari con informazioni sulle attrazioni nell'itinerario
         """
         print(f"\nGenerazione itinerario per turista {tourist_id}...")
-        print(f"Parametri: {time_of_day}, {day_of_week}, RL={use_rl}, A*={use_astar}")
 
         # Ottieni il profilo del turista
         tourist_profile = get_tourist_profile(self.tourists_df, tourist_id)
         if not tourist_profile:
             print(f"Turista con ID {tourist_id} non trovato!")
             return []
-
-        print(f"Profilo turista: arte={tourist_profile['arte']}, storia={tourist_profile['storia']}, " +
-              f"natura={tourist_profile['natura']}, divertimento={tourist_profile['divertimento']}, " +
-              f"tempo={tourist_profile['tempo']} minuti")
 
         # Evidenze per il modello probabilistico
         evidence = {
@@ -107,13 +102,11 @@ class RomaItinerarySystem:
         selected_attractions = []
 
         if use_rl:
-            print("Selezione attrazioni con Reinforcement Learning...")
 
             # Verifica se l'agente è già addestrato
             if tourist_id not in self.agents:
-                print(f"Addestramento agente RL per il turista {tourist_id}...")
                 self.agents[tourist_id] = ItineraryAgent(tourist_id, self.reasoner, self.uncertainty_model)
-                self.agents[tourist_id].train(num_episodes=50)
+                self.agents[tourist_id].train(num_episodes=5)
 
             # Genera itinerario
             attraction_ids, reward = self.agents[tourist_id].generate_itinerary(time_of_day, day_of_week)
@@ -155,7 +148,6 @@ class RomaItinerarySystem:
                 except Exception as e:
                     print(f"Errore nell'elaborazione dell'attrazione {attr_id}: {e}")
         else:
-            print("Selezione attrazioni con ragionamento ontologico...")
 
             # Determina gli interessi del turista
             interests = []
@@ -169,11 +161,8 @@ class RomaItinerarySystem:
             if tourist_profile['divertimento'] > 0:
                 interests.append('divertimento')  # In italiano minuscolo
 
-            print(f"Interessi identificati: {interests}")
-
             # Query all'ontologia
             attractions = self.reasoner.find_attractions_by_interest(interests)
-            print(f"Trovate {len(attractions)} attrazioni che corrispondono agli interessi")
 
             # Filtro per rating e costo
             filtered_attractions = []
@@ -229,7 +218,6 @@ class RomaItinerarySystem:
             filtered_attractions.sort(key=lambda a: a['rating'], reverse=True)
             selected_attractions = filtered_attractions[:10]  # Limita a 10 per efficienza
 
-        print(f"Selezionate {len(selected_attractions)} attrazioni")
 
         # Se non ci sono attrazioni selezionate, termina
         if not selected_attractions:
@@ -240,20 +228,15 @@ class RomaItinerarySystem:
         final_itinerary = []
 
         if use_astar and len(selected_attractions) > 1:
-            print("Ottimizzazione dell'ordine con A*...")
 
             # Punto di partenza (centro di Roma)
             start_location = (41.9028, 12.4964)
 
             # Calcolo tempo totale necessario per le attrazioni selezionate
             total_visit_time = sum(attr['visit_time'] for attr in selected_attractions)
-            print(f"Tempo totale per tutte le attrazioni: {total_visit_time} minuti")
-            print(f"Tempo disponibile: {tourist_profile['tempo']} minuti")
 
             # Se il tempo totale è maggiore del tempo disponibile, ridurre il numero di attrazioni
             if total_visit_time > tourist_profile['tempo']:
-                print("Tempo necessario superiore al tempo disponibile, riduco il numero di attrazioni...")
-
                 # Ordina per rating e limita il numero di attrazioni
                 selected_attractions.sort(key=lambda a: a['rating'], reverse=True)
 
@@ -272,8 +255,6 @@ class RomaItinerarySystem:
                         break
 
                 selected_attractions = pruned_attractions
-                print(
-                    f"Ridotto a {len(selected_attractions)} attrazioni con tempo totale stimato: {cumulative_time} minuti")
 
             # Procedi con A* solo se ci sono ancora attrazioni
             if selected_attractions:
@@ -324,7 +305,6 @@ class RomaItinerarySystem:
                                 final_itinerary.append(attr_copy)
                                 break
                 else:
-                    print("A* non ha trovato un percorso valido. Uso l'ordine originale.")
 
                     # Calcola tempi di attesa e viaggio per l'ordine originale
                     for i, attr in enumerate(selected_attractions):

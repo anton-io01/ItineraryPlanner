@@ -79,8 +79,6 @@ class DatalogReasoner:
         # Carica i dati dei turisti
         self._load_tourist_data()
 
-        print("Reasoner Datalog inizializzato con successo")
-
     def _load_tourist_data(self):
         """Carica i dati dei turisti nella knowledge base"""
         # Carica i dati dei turisti
@@ -128,9 +126,6 @@ class DatalogReasoner:
         """Trova attrazioni in base agli interessi con ricerca flessibile"""
         attraction_ids = set()
 
-        # Debug - mostra interessi ricevuti
-        print(f"Ricerca attrazioni per interessi: {interests}")
-
         # Se non ci sono interessi, restituisci tutte le attrazioni
         if not interests:
             print("Nessun interesse specificato, restituisco tutte le attrazioni")
@@ -155,8 +150,6 @@ class DatalogReasoner:
             else:
                 search_terms.add(interest)
 
-        print(f"Termini di ricerca: {search_terms}")
-
         # Cerca nelle descrizioni
         for _, attr in self.attractions_df.iterrows():
             description = attr['descrizione'].lower()
@@ -168,12 +161,8 @@ class DatalogReasoner:
                     attraction_ids.add(str(attr['id_attrazione']))
                     break
 
-        print(f"Trovate {len(attraction_ids)} attrazioni basate su descrizioni e nomi")
-
         # Se non è stato trovato nulla, restituisci le attrazioni con il rating più alto
         if not attraction_ids:
-            print(
-                "Nessuna attrazione trovata in base agli interessi, restituisco le attrazioni con valutazioni migliori")
             top_attractions = self.attractions_df.sort_values('recensione_media', ascending=False).head(5)
             attraction_ids = set(str(id) for id in top_attractions['id_attrazione'])
 
@@ -196,8 +185,6 @@ class DatalogReasoner:
             # Verifica tempo e rating
             if attr['tempo_visita'] <= max_time_minutes and attr['recensione_media'] >= min_rating:
                 attraction_ids.append(str(attr['id_attrazione']))
-
-        print(f"Trovate {len(attraction_ids)} attrazioni con tempo di visita <= {max_time_minutes} min")
         return attraction_ids
 
     def get_tourist_by_id(self, tourist_id):
@@ -352,15 +339,10 @@ class DatalogReasoner:
                     def instances(self):
                         """Restituisce tutte le istanze di attrazioni"""
                         result = []
-                        print(f"Cercando attrazioni nel DataFrame di lunghezza {len(self.r.attractions_df)}")
                         for attr_id in range(1, len(self.r.attractions_df) + 1):
-                            print(f"Cercando attraction_{attr_id}")
                             attr = self.r.search_one(f"attraction_{attr_id}")
                             if attr:
-                                print(f"Trovata attrazione: {attr.name}")
                                 result.append(attr)
-                            else:
-                                print(f"Attrazione attraction_{attr_id} non trovata")
                         return result
 
                 self.Attraction = AttractionClass(reasoner)
