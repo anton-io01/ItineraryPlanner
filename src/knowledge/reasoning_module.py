@@ -180,6 +180,27 @@ class DatalogReasoner:
 
         return list(attraction_ids)
 
+    def find_attractions_by_max_time(self, max_time_minutes, min_rating=3.5):
+        """
+        Trova attrazioni che richiedono al massimo il tempo specificato
+
+        Args:
+            max_time_minutes: Tempo massimo di visita in minuti
+            min_rating: Valutazione minima
+
+        Returns:
+            Lista di ID delle attrazioni
+        """
+        attraction_ids = []
+
+        for _, attr in self.attractions_df.iterrows():
+            # Verifica tempo e rating
+            if attr['tempo_visita'] <= max_time_minutes and attr['recensione_media'] >= min_rating:
+                attraction_ids.append(str(attr['id_attrazione']))
+
+        print(f"Trovate {len(attraction_ids)} attrazioni con tempo di visita <= {max_time_minutes} min")
+        return attraction_ids
+
     def get_tourist_by_id(self, tourist_id):
         """
         Restituisce un oggetto che rappresenta un turista con i suoi attributi
