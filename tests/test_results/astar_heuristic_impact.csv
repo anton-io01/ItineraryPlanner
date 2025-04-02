@@ -1,4 +1,0 @@
-nome,Descrizione,Efficienza,Nodi esplorati,Ottimalità
-Base,Solo tempo visita,0.6,42,0.8
-Intermedia,Tempo visita + attesa,0.75,35,0.9
-Completa,Tempo visita + attesa + viaggio (MST),0.9,28,1.0

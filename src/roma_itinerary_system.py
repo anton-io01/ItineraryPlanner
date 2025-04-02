@@ -104,7 +104,7 @@ class RomaItinerarySystem:
             # Verifica se l'agente è già addestrato
             if tourist_id not in self.agents:
                 self.agents[tourist_id] = ItineraryAgent(tourist_id, self.reasoner, self.uncertainty_model)
-                self.agents[tourist_id].train(num_episodes=5)
+                self.agents[tourist_id].train(num_episodes=50)
 
             # Genera itinerario
             attraction_ids, reward = self.agents[tourist_id].generate_itinerary(time_of_day, day_of_week)
